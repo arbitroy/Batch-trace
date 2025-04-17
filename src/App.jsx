@@ -124,102 +124,59 @@ function App() {
     decodeUrlParams(); // Call the function when the component mounts
   }, []); // Only run once when component mounts
 
-  useEffect(() => {
-    if (licenceid && guid) {
-      // Get API base URL from environment
-      const apiBaseUrl = import.meta.env.VITE_API_URL;
-      
-      // In production with AllOrigins gateway
-      if (import.meta.env.PROD && apiBaseUrl.includes('allorigins')) {
-        const url = `${apiBaseUrl}/orders`;
-        
-        console.log('Making API request via gateway with:', { licenseid: licenceid, guid: guid });
-        console.log('API URL:', url);
-        
-        // Create the request data
+   useEffect(() => {
+      if (licenceid && guid) {
+        // Only make the POST request when both licenceid and guid are available
+        // Use the proxy defined in package.json by using a relative URL path
+        const url = 'http://localhost:3000/call-api';
+  
+  
+        // Create the JSON object with the licenseid and guid
         const data = {
           licenseid: licenceid,
           guid: guid,
         };
-        
-        // For AllOrigins we need to use GET with params in URL since it doesn't support POST well
-        const queryString = new URLSearchParams(data).toString();
-        const urlWithParams = `${url}?${queryString}`;
-        
-        fetch(urlWithParams)
-          .then(async (response) => {
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error('Error response:', errorText.substring(0, 500));
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            
-            return response.json();
-          })
-          .then((sdata) => {
-            setResponseData(sdata);
-            console.log("API Response data:", sdata);
-            
-            if (sdata && Object.keys(sdata).length > 0) {
-              setOrderData(sdata);
-              setLoading(false);
-            } else {
-              fetchLocalData();
-            }
-          })
-          .catch((error) => {
-            console.error('API Error:', error);
-            fetchLocalData();
-          });
-      }
-      // Standard development or direct API approach
-      else {
-        const url = `${apiBaseUrl}/orders`;
-        
-        console.log('Making direct API request with:', { licenseid: licenceid, guid: guid });
-        console.log('API URL:', url);
-        
-        const data = {
-          licenseid: licenceid,
-          guid: guid,
-        };
-        
+  
+  
         fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          // Remove cors mode since we're using a proxy to handle CORS
           body: JSON.stringify(data),
         })
-          .then(async (response) => {
+          .then((response) => {
             if (!response.ok) {
-              const errorText = await response.text();
-              console.error('Error response:', errorText.substring(0, 500));
               throw new Error(`HTTP error! Status: ${response.status}`);
             }
-            
             return response.json();
           })
           .then((sdata) => {
+            // Handle the response from the server and store it in the state
             setResponseData(sdata);
-            console.log("API Response data:", sdata);
-            
+  
+            // If we have a successful response, use it instead of the local JSON
             if (sdata && Object.keys(sdata).length > 0) {
               setOrderData(sdata);
               setLoading(false);
             } else {
+              // Fallback to local JSON if API response is empty
               fetchLocalData();
             }
           })
           .catch((error) => {
+            // Handle any errors that occur during the POST request
             console.error('API Error:', error);
+            // Fallback to local JSON on error
             fetchLocalData();
           });
+      } else {
+        // If no IDs available, just load local data
+        fetchLocalData();
       }
-    } else {
-      fetchLocalData();
-    }
-  }, [licenceid, guid]);
+    }, [licenceid, guid]); // Trigger the effect whenever licenceid or guid changes
+  
 
   // Function to fetch local data as fallback
   const fetchLocalData = async () => {
