@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  batch-tracer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: batch-tracer
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - EXTERNAL_API_URL=http://test-dev.api-eprod-solutions.com:9000/trace/orders
