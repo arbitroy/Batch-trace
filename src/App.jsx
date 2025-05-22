@@ -67,31 +67,31 @@ function App() {
       try {
         // Get the full path
         const path = window.location.pathname;
-        
+
         // Extract the part after /order/
         const matches = path.match(/\/order\/([^\/]+)/);
-        
+
         if (!matches || !matches[1]) {
           console.error('No encoded data found in URL path');
           return;
         }
-        
+
         // Get the encoded string
         const encodedString = matches[1];
-        
+
         // Check if there's a colon separator (for licenceid:guid format)
         if (encodedString.includes(':')) {
           // Split by colon
           const [encodedLicenceId, encodedGuid] = encodedString.split(':');
-          
+
           try {
             // Decode both parts
             const licenceid = atob(encodedLicenceId);
             const guid = encodedGuid; // GUID may not need base64 decoding if already readable
-            
+
             console.log('Decoded licenceid:', licenceid);
             console.log('GUID:', guid);
-            
+
             setLicenseid(licenceid);
             setGuid(guid);
           } catch (e) {
@@ -101,12 +101,12 @@ function App() {
           // Try to decode the whole string in one go
           try {
             const decodedString = atob(encodedString);
-            
+
             // Try to find patterns in the decoded string
             // This could be a dot separator or other format
             if (decodedString.includes('.')) {
               const [licenceid, guid] = decodedString.split('.');
-              
+
               setLicenseid(licenceid);
               setGuid(guid);
             } else {
@@ -124,59 +124,54 @@ function App() {
     decodeUrlParams(); // Call the function when the component mounts
   }, []); // Only run once when component mounts
 
-   useEffect(() => {
-      if (licenceid && guid) {
-        // Only make the POST request when both licenceid and guid are available
-        // Use the proxy defined in package.json by using a relative URL path
-        const url = 'http://localhost:3000/call-api';
-  
-  
-        // Create the JSON object with the licenseid and guid
-        const data = {
-          licenseid: licenceid,
-          guid: guid,
-        };
-  
-  
-        fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // Remove cors mode since we're using a proxy to handle CORS
-          body: JSON.stringify(data),
+  useEffect(() => {
+    if (licenceid && guid) {
+      // Use dynamic URL instead of hardcoded localhost
+      const url = `${window.location.protocol}//${window.location.host}/call-api`;
+
+      // Create the JSON object with the licenseid and guid
+      const data = {
+        licenseid: licenceid,
+        guid: guid,
+      };
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
         })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then((sdata) => {
-            // Handle the response from the server and store it in the state
-            setResponseData(sdata);
-  
-            // If we have a successful response, use it instead of the local JSON
-            if (sdata && Object.keys(sdata).length > 0) {
-              setOrderData(sdata);
-              setLoading(false);
-            } else {
-              // Fallback to local JSON if API response is empty
-              fetchLocalData();
-            }
-          })
-          .catch((error) => {
-            // Handle any errors that occur during the POST request
-            console.error('API Error:', error);
-            // Fallback to local JSON on error
+        .then((sdata) => {
+          // Handle the response from the server and store it in the state
+          setResponseData(sdata);
+
+          // If we have a successful response, use it instead of the local JSON
+          if (sdata && Object.keys(sdata).length > 0) {
+            setOrderData(sdata);
+            setLoading(false);
+          } else {
+            // Fallback to local JSON if API response is empty
             fetchLocalData();
-          });
-      } else {
-        // If no IDs available, just load local data
-        fetchLocalData();
-      }
-    }, [licenceid, guid]); // Trigger the effect whenever licenceid or guid changes
-  
+          }
+        })
+        .catch((error) => {
+          // Handle any errors that occur during the POST request
+          console.error('API Error:', error);
+          // Fallback to local JSON on error
+          fetchLocalData();
+        });
+    } else {
+      // If no IDs available, just load local data
+      fetchLocalData();
+    }
+  }, [licenceid, guid]);
 
   // Function to fetch local data as fallback
   const fetchLocalData = async () => {
@@ -373,7 +368,7 @@ function App() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex flex-wrap justify-between items-center">
                         <div className="mb-3 md:mb-0">
                           <div className="text-sm text-gray-500">Document Number</div>
@@ -426,23 +421,23 @@ function App() {
                           {farmer.FarmerName}
                         </span>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <div className="text-xs text-gray-500">Field</div>
                           <div className="text-sm font-medium">{farmer.FieldName}</div>
                         </div>
-                        
+
                         <div>
                           <div className="text-xs text-gray-500">Group</div>
                           <div className="text-sm font-medium">{farmer.GroupName}</div>
                         </div>
-                        
+
                         <div>
                           <div className="text-xs text-gray-500">Location</div>
                           <div className="text-sm font-medium">{farmer.Location}</div>
                         </div>
-                        
+
                         <div>
                           <div className="text-xs text-gray-500">Batch</div>
                           <div className="text-sm font-medium">
