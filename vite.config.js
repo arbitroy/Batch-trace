@@ -9,6 +9,10 @@ export default defineConfig({
         target: 'http://test-dev.api-eprod-solutions.com:9000',
         changeOrigin: true,
         secure: false,
+      },
+      '/call-api': {
+        target: 'http://localhost:3000', // Your Express server port
+        changeOrigin: true,
       }
     }
   }
