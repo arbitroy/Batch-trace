@@ -272,9 +272,27 @@ function App() {
   }
 
   // Get unique batch numbers
+  // Get unique batch numbers and calculate batch amounts
   const uniqueBatchNumbers = orderData?.farmers
     ? [...new Set(orderData.farmers.map(farmer => farmer.BatchNumber))]
     : [];
+
+  // Calculate batch amounts grouped by batch number (only count unique amounts per batch)
+  const batchAmounts = orderData?.farmers
+    ? orderData.farmers.reduce((acc, farmer) => {
+      if (farmer.BatchNumber && farmer.BatchAmount) {
+        // Only set the amount if we haven't seen this batch before
+        // Convert to number to ensure proper arithmetic
+        if (!acc[farmer.BatchNumber]) {
+          acc[farmer.BatchNumber] = Number(farmer.BatchAmount);
+        }
+      }
+      return acc;
+    }, {})
+    : {};
+
+  // Calculate total batch amount (make sure we're adding numbers, not strings)
+  const totalBatchAmount = Object.values(batchAmounts).reduce((sum, amount) => sum + Number(amount), 0);
 
   return (
     <div className="w-full bg-gradient-to-br from-company-sky/20 via-white to-company-sky/20 pt-4 pb-4 md:pt-6 md:pb-8">
@@ -296,7 +314,10 @@ function App() {
             <div className="bg-company-sky/10 rounded-lg p-4 md:p-5">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-company-teal flex items-center justify-center text-white mr-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve" fill="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g display="none"> <path display="inline" opacity="0.2" enable-background="new" d="M84.6,0H80H20h-6.2H0v100h13h7h60h7.3H100V0 H84.6z M20,80V20h60v60H20z"></path> </g> <g display="none"> <rect x="20.1" y="20.1" display="inline" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="59.8"></rect> </g> <g display="none"> <g display="inline" opacity="0.5"> <line fill="none" stroke-width="0.25" stroke-miterlimit="10" x1="79.9" y1="20.1" x2="20.1" y2="79.9"></line> <line fill="none" stroke-width="0.25" stroke-miterlimit="10" x1="20.1" y1="20.1" x2="79.9" y2="79.9"></line> <g> <rect x="20.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="22.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="24.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="26.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="28.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="30.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="32.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="34.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="36.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="38.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="40" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="42" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="44" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="46" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="48" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="50" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="52" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="54" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="56" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="58" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="60" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="62" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="63.9" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="65.9" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="67.9" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="69.9" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="71.9" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="73.9" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="75.9" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> <rect x="20.1" y="77.9" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="59.8" height="2"></rect> </g> <g> <rect x="20.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="22.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="24.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="26.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="28.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="30.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="32.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="34.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="36.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="38.1" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="40" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="42" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="44" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="46" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="48" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="50" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="52" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="54" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="56" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="58" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="60" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="62" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="63.9" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="65.9" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="67.9" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="69.9" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="71.9" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="73.9" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="75.9" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> <rect x="77.9" y="20.1" fill="none" stroke-width="0.25" stroke-miterlimit="10" width="2" height="59.8"></rect> </g> </g> </g> <g> <g> <path d="M47.9,63c0.9,0,1.7,0.1,2.5,0.4L36.9,25.1l-1.2-3.7c-0.4-1.1-1.5-1.6-2.5-1.2L21.4,24 c-1.1,0.4-1.6,1.5-1.2,2.5l1.2,3.7c0.4,1.1,1.5,1.6,2.5,1.2l6.1-2l12.4,35.1C44,63.6,45.9,63,47.9,63z M69,53.9l-12.4,4.4 c-1.2,0.5-2.7-0.2-3.1-1.5l-4.4-12.4c-0.5-1.2,0.2-2.7,1.5-3.1L63,36.9c1.2-0.5,2.7,0.2,3.1,1.5l4.4,12.4C71,52,70.3,53.4,69,53.9 z M57.3,33.5l-8.4,2.9c-1.2,0.5-2.7-0.2-3.1-1.5l-2.9-8.4c-0.5-1.2,0.2-2.7,1.5-3.1l8.4-2.9c1.2-0.5,2.7,0.2,3.1,1.5l2.9,8.4 C59.3,31.5,58.6,33,57.3,33.5z M79.9,61.7L78.6,58c-0.4-1.1-1.5-1.6-2.5-1.2l-22.7,7.9c2.4,1.5,4,4,4.5,6.9l20.9-7.1 C79.8,64,80.3,62.9,79.9,61.7z M47.9,66.2c-3.7,0-6.9,3.1-6.9,6.9c0,3.7,3.1,6.9,6.9,6.9s6.9-3.1,6.9-6.9 C54.8,69.2,51.6,66.2,47.9,66.2z"></path> </g> </g> </g></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clipRule="evenodd" />
+                  </svg>
                 </div>
                 <label className="text-sm md:text-base font-medium text-company-turquoise">Order Number</label>
               </div>
@@ -321,7 +342,7 @@ function App() {
                 {uniqueBatchNumbers.length > 0 ? (
                   <div className="flex flex-wrap gap-2 justify-center">
                     {uniqueBatchNumbers.map((batchNumber, index) => (
-                      <span 
+                      <span
                         key={index}
                         className="px-2 py-1 md:px-3 md:py-1.5 bg-company-sky/20 text-company-teal rounded text-sm md:text-base font-medium"
                       >
@@ -342,13 +363,53 @@ function App() {
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <label className="text-sm md:text-base font-medium text-company-turquoise">Batch Amount</label>
+                <label className="text-sm md:text-base font-medium text-company-turquoise">Total Batch Amount</label>
               </div>
-              <div className="bg-white py-2 px-3 md:py-3 md:px-4 rounded border border-gray-200 text-center text-lg md:text-xl text-company-lime font-medium">
-                {orderData?.BatchAmount || '1000'}
+              <div className="bg-white py-2 px-3 md:py-3 md:px-4 rounded border border-gray-200 text-center">
+                {totalBatchAmount > 0 ? (
+                  <div className="text-lg md:text-xl text-company-lime font-medium">
+                    {totalBatchAmount.toLocaleString()}
+                  </div>
+                ) : orderData?.BatchAmount ? (
+                  <div className="text-lg md:text-xl text-company-lime font-medium">
+                    {orderData.BatchAmount}
+                  </div>
+                ) : (
+                  <div className="text-lg md:text-xl text-company-lime font-medium">
+                    Coming Soon
+                  </div>
+                )}
               </div>
             </div>
           </div>
+
+          {/* Batch Details Section - Show when multiple batches exist */}
+          {Object.keys(batchAmounts).length > 1 && (
+            <div className="bg-company-sky/10 rounded-lg p-4 md:p-5 mb-6 md:mb-8">
+              <div className="flex items-center mb-4">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-company-teal flex items-center justify-center text-white mr-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <label className="text-sm md:text-base font-medium text-company-turquoise">Batch Details</label>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                {Object.entries(batchAmounts).map(([batchNumber, amount]) => (
+                  <div key={batchNumber} className="bg-white rounded border border-gray-200 p-3 md:p-4">
+                    <div className="text-xs md:text-sm text-gray-500 mb-1">Batch Number</div>
+                    <div className="text-sm md:text-base font-medium text-company-teal mb-2 truncate" title={batchNumber}>
+                      {batchNumber}
+                    </div>
+                    <div className="text-xs md:text-sm text-gray-500 mb-1">Amount</div>
+                    <div className="text-lg md:text-xl font-semibold text-company-lime">
+                      {amount.toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {orderData?.Description && (
             <div className="bg-company-sky/10 rounded-lg p-4 md:p-5 mb-6 md:mb-8">
@@ -472,6 +533,15 @@ function App() {
                             </span>
                           </div>
                         </div>
+
+                        {farmer.BatchAmount && (
+                          <div>
+                            <div className="text-xs text-gray-500">Amount</div>
+                            <div className="text-sm font-medium text-company-lime">
+                              {farmer.BatchAmount.toLocaleString()}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
