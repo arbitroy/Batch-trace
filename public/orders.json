@@ -8,7 +8,7 @@
             "documentType": "Purchase Order",
             "documentBase64": "PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNTEyLjAwMDAwMHB0IiBoZWlnaHQ9IjUxMi4wMDAwMDBwdCIgdmlld0JveD0iMCAwIDUxMi4wMDAwMDAgNTEyLjAwMDAwMCIKIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPgoKPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMC4wMDAwMDAsNTEyLjAwMDAwMCkgc2NhbGUoMC4xMDAwMDAsLTAuMTAwMDAwKSIKZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSJub25lIj4KPHBhdGggZD0iTTE2MzggNTA5OSBjLTIzIC0xMiAtNDYgLTM1IC01OCAtNTkgLTE4IC0zNiAtMjAgLTU5IC0yMCAtMjcwIGwwCi0yMzAgLTI0MCAwIGMtMjIyIDAgLTI0NCAtMiAtMjgwIC0yMCAtMjYgLTEzIC00NyAtMzQgLTYwIC02MCAtMTggLTM2IC0yMAotNTggLTIwIC0yODAgbDAgLTI0MCAtMjQwIDAgYy0yMjIgMCAtMjQ0IC0yIC0yODAgLTIwIC0yNiAtMTMgLTQ3IC0zNCAtNjAKLTYwIC0yMCAtMzkgLTIwIC01NSAtMjAgLTE4ODYgbDAgLTE4NDggMjEgLTQzIGMxNCAtMzAgMzMgLTUwIDYwIC02MyAzNyAtMjAKNjYgLTIwIDE1MTkgLTIwIDE0NjQgMCAxNDgxIDAgMTUyMCAyMCAyNiAxMyA0NyAzNCA2MCA2MCAxOCAzNiAyMCA1OCAyMCAyODAKbDAgMjQwIDI0MCAwIGMyMjIgMCAyNDQgMiAyODAgMjAgMjYgMTMgNDcgMzQgNjAgNjAgMTggMzYgMjAgNTggMjAgMjcwIGwwCjIzMCAyNDAgMCBjMjIyIDAgMjQ0IDIgMjgwIDIwIDI2IDEzIDQ3IDM0IDYwIDYwIDIwIDM5IDIwIDU1IDIwIDE4OTAgMCAxODM1CjAgMTg1MSAtMjAgMTg5MCAtMTMgMjYgLTM0IDQ3IC02MCA2MCAtMzkgMjAgLTU1IDIwIC0xNTIyIDIwIC0xNDU3IC0xIC0xNDg0Ci0xIC0xNTIwIC0yMXogbTI4MjIgLTE5NDkgbDAgLTE2NzAgLTE1MCAwIC0xNTAgMCAwIDE0NzAgYzAgMTQ1NCAwIDE0NzEgLTIwCjE1MTAgLTEzIDI2IC0zNCA0NyAtNjAgNjAgLTM5IDIwIC01NyAyMCAtMTEzMCAyMCBsLTEwOTAgMCAwIDE0MCAwIDE0MCAxMzAwCjAgMTMwMCAwIDAgLTE2NzB6IG0tNjAwIC01ODAgbDAgLTE2NzAgLTE1MCAwIC0xNTAgMCAwIDE0NjAgYzAgMTQ0NCAwIDE0NjEKLTIwIDE1MDAgLTEzIDI2IC0zNCA0NyAtNjAgNjAgLTM5IDIwIC01NyAyMCAtMTEzMCAyMCBsLTEwOTAgMCAwIDE1MCAwIDE1MAoxMzAwIDAgMTMwMCAwIDAgLTE2NzB6IG0tNjAwIC02MDAgbDAgLTE2NzAgLTEzMDAgMCAtMTMwMCAwIDAgMTY3MCAwIDE2NzAKMTMwMCAwIDEzMDAgMCAwIC0xNjcweiIvPgo8cGF0aCBkPSJNMTAzOCAzMzE5IGMtNDMgLTIyIC03OCAtODEgLTc4IC0xMzAgMCAtNDYgMzkgLTEwOCA4MiAtMTMwIDM2IC0xOAo3MyAtMTkgOTIwIC0xOSAxMDAxIDAgOTMxIC02IDk3NiA4MCAyOCA1NiAyOCA4NCAwIDE0MCAtNDUgODYgMjUgODAgLTk3OCA4MAotODYxIC0xIC04ODYgLTEgLTkyMiAtMjF6Ii8+CjxwYXRoIGQ9Ik0xMzAwIDI3MjIgYy01MCAtMjUgLTgwIC03NSAtODAgLTEzMiAwIC01NyAzMCAtMTA3IDgwIC0xMzIgMzIgLTE3Cjg1IC0xOCA2NjAgLTE4IDY5NyAwIDY2OSAtMyA3MTcgNjkgNDggNzEgMjAgMTc1IC01NyAyMTMgLTMyIDE3IC04NSAxOCAtNjYwCjE4IC01NzUgMCAtNjI4IC0xIC02NjAgLTE4eiIvPgo8cGF0aCBkPSJNMTc4OSAyMTUwIGMtMjM1IC00OSAtNDU4IC0yMTkgLTU2MCAtNDI1IC0yNSAtNTEgLTMwIC03MiAtMjYgLTEwMgoxNyAtMTAyIDEyNSAtMTYwIDIxNSAtMTE0IDMxIDE2IDUxIDM3IDgxIDg4IDc2IDEzMSAyMDggMjI5IDM1MCAyNTkgODQgMTcKMTM5IDE3IDIyMyAwIDk1IC0yMSAxNzMgLTYyIDI0NyAtMTMyIDU1IC01MSA2MiAtNjMgNTMgLTgwIC0xMSAtMjAgLTE1IC01MQotMTMgLTk2IDIgLTYzIDE1NiAtMTc4IDI0NiAtMTg2IDc0IC02IDEwOSAyMSAxNjcgMTMzIDUyIDEwMCA1OSAxNDAgMjkgMTk1Ci0yMSA0MCAtNzQgODAgLTEwNiA4MCAtMTYgMCAtMzcgMjAgLTc0IDcwIC0xODkgMjU0IC01MTggMzc3IC04MzIgMzEweiIvPgo8cGF0aCBkPSJNMTI0MCAxMzA4IGMtMzggLTE5IC01MSAtMzUgLTg3IC0xMDMgLTUwIC05NCAtNjAgLTEzMyAtNDQgLTE4NSAxNAotNDYgNjggLTk3IDExNCAtMTA1IDIzIC01IDM5IC0xNiA1MiAtMzcgMzIgLTU1IDE1NiAtMTc3IDIyOCAtMjI1IDI2OCAtMTc4CjY0NyAtMTc4IDkxNyAyIDg2IDU3IDE5NiAxNzMgMjQ5IDI2MiAzMyA1NiA0MSA3OSA0MSAxMTkgMCA2NiAtMjggMTEwIC04NgoxMzYgLTg0IDM2IC0xNDkgNiAtMjA5IC05NyAtMTY5IC0yODggLTU4NyAtMzQ0IC04MjIgLTEwOSAtNDggNDcgLTUzIDU2IC00Mwo3NSAxNyAzMCAxNCAxMDIgLTUgMTM4IC0yMSA0MiAtMTcwIDE0MSAtMjIxIDE0NyAtMjggNCAtNTEgLTEgLTg0IC0xOHoiLz4KPC9nPgo8L3N2Zz4K",
             "documentName": "Purchase Order32332320250414140821.svg",
-            "documentNumber": "323323"
+            "documentNumber": "323623"
         },
         {
             "documentType": "Phytosanitary Certificate",
@@ -29,14 +29,60 @@
             "FarmerName": "Austine",
             "FieldName": "Coffee field",
             "GroupName": "Gachie Farmers",
-            "Location": "Kara"
+            "Location": "Kara",
+            "latitude": 0.361372,
+            "longitude": 32.601233,
+            "BatchAmount": 2500
         },
         {
             "BatchNumber": "QWE-8C55C10B-5715-4690-A3C1-17D5DDA66554",
             "FarmerName": "Moses Mutu",
-            "FieldName": "Mutuku's COffee Farm",
+            "FieldName": "Mutuku's Coffee Farm",
             "GroupName": "Gachie Farmers",
-            "Location": "Centrale"
+            "Location": "Centrale",
+            "latitude": 0.385421,
+            "longitude": 32.625847,
+            "BatchAmount": 3200
+        },
+        {
+            "BatchNumber": "QWE-8C55C10B-5715-4690-A3C1-17D5DDA67890",
+            "FarmerName": "Sarah Nakato",
+            "FieldName": "Nakato Coffee Estate",
+            "GroupName": "Gachie Farmers",
+            "Location": "Mukono",
+            "latitude": 0.353284,
+            "longitude": 32.615492,
+            "BatchAmount": 1800
+        },
+        {
+            "BatchNumber": "QWE-8C55C10B-5715-4690-A3C1-17D5DDA69876",
+            "FarmerName": "James Okello",
+            "FieldName": "Okello Family Farm",
+            "GroupName": "Busoga Farmers Co-op",
+            "Location": "Jinja",
+            "latitude": 0.342158,
+            "longitude": 32.638591,
+            "BatchAmount": 4100
+        },
+        {
+            "BatchNumber": "QWE-8C55C10B-5715-4690-A3C1-17D5DDA65432",
+            "FarmerName": "Grace Namukasa",
+            "FieldName": "Namukasa Organic Farm",
+            "GroupName": "Gachie Farmers",
+            "Location": "Wakiso",
+            "latitude": 0.375639,
+            "longitude": 32.588104,
+            "BatchAmount": 2900
+        },
+        {
+            "BatchNumber": "QWE-8C55C10B-5715-4690-A3C1-17D5DDA61234",
+            "FarmerName": "Peter Ssekandi",
+            "FieldName": "Ssekandi Coffee Plantation",
+            "GroupName": "Central Uganda Farmers",
+            "Location": "Mpigi",
+            "latitude": 0.329847,
+            "longitude": 32.572648,
+            "BatchAmount": 3500
         }
     ]
 }
