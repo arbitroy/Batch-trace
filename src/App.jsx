@@ -57,6 +57,7 @@ const IconByType = ({ type }) => {
 const FarmersMap = ({ farmers }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const mapboxglRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(null);
   const [geojsonData, setGeojsonData] = useState(null);
@@ -65,12 +66,12 @@ const FarmersMap = ({ farmers }) => {
 
   // Function to fly to a specific polygon
   const flyToPolygon = (feature, index) => {
-    if (!map.current || !feature.geometry) return;
+    if (!map.current || !feature.geometry || !mapboxglRef.current) return;
 
     setSelectedPolygon(index);
 
     // Calculate bounds for the polygon
-    const bounds = new mapboxgl.default.LngLatBounds();
+    const bounds = new mapboxglRef.current.LngLatBounds();
     
     if (feature.geometry.type === 'Polygon') {
       feature.geometry.coordinates[0].forEach(coord => {
@@ -88,7 +89,7 @@ const FarmersMap = ({ farmers }) => {
     if (!bounds.isEmpty()) {
       map.current.fitBounds(bounds, { 
         padding: 100,
-        maxZoom: 15,
+        maxZoom: 19,
         duration: 1500
       });
     }
@@ -111,6 +112,7 @@ const FarmersMap = ({ farmers }) => {
       ]);
     }
   };
+  
   // Load GeoJSON data from public folder
   const loadGeojsonData = async () => {
     try {
@@ -144,6 +146,7 @@ const FarmersMap = ({ farmers }) => {
     import('mapbox-gl').then(async (mapboxgl) => {
       if (map.current) return; // Initialize map only once
 
+      mapboxglRef.current = mapboxgl.default;
       mapboxgl.default.accessToken = MAPBOX_TOKEN;
 
       map.current = new mapboxgl.default.Map({
@@ -267,7 +270,7 @@ const FarmersMap = ({ farmers }) => {
 
         // Fit map to show all features
         if (geoData.features.length > 0) {
-          const bounds = new mapboxgl.default.LngLatBounds();
+          const bounds = new mapboxglRef.current.LngLatBounds();
           
           geoData.features.forEach(feature => {
             if (feature.geometry.type === 'Polygon') {
@@ -309,7 +312,7 @@ const FarmersMap = ({ farmers }) => {
 
   if (mapError) {
     return (
-      <div className="h-96 flex items-center justify-center bg-gray-100 rounded-lg">
+      <div className="h-[600px] flex items-center justify-center bg-gray-100 rounded-lg">
         <div className="text-center p-6">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -323,7 +326,7 @@ const FarmersMap = ({ farmers }) => {
 
   return (
     <div className="relative">
-      <div ref={mapContainer} className="h-96 rounded-lg overflow-hidden" />
+      <div ref={mapContainer} className="h-[600px] rounded-lg overflow-hidden" />
       
       {/* Map Key/Legend */}
       {geojsonData && geojsonData.features && geojsonData.features.length > 0 && (
@@ -339,11 +342,11 @@ const FarmersMap = ({ farmers }) => {
           </button>
 
           {showKey && (
-            <div className="bg-white rounded-lg shadow-lg max-w-xs w-80 max-h-80 overflow-hidden">
+            <div className="bg-white rounded-lg shadow-lg max-w-xs w-80 max-h-96 overflow-hidden">
               <div className="p-3 bg-company-teal text-white">
                 <h3 className="font-semibold text-sm">Fields ({geojsonData.features.length})</h3>
               </div>
-              <div className="max-h-64 overflow-y-auto">
+              <div className="max-h-80 overflow-y-auto">
                 {geojsonData.features.map((feature, index) => {
                   const props = feature.properties;
                   const isSelected = selectedPolygon === index;
@@ -364,58 +367,49 @@ const FarmersMap = ({ farmers }) => {
                           <div className="font-medium text-sm text-gray-900 truncate">
                             {props.name || props.fieldName || `Field ${index + 1}`}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {props.Area && (
-                              <div>Area: {props.Area} {props.Unit || 'ha'}</div>
-                            )}
-                            {props.Admin_Level_1 && (
-                              <div>Region: {props.Admin_Level_1}</div>
-                            )}
-                            {props.fieldGUID && (
-                              <div>ID: {props.fieldGUID.substring(0, 8)}...</div>
-                            )}
-                          </div>
                         </div>
                       </div>
                     </button>
                   );
                 })}
               </div>
-              <div className="p-2 bg-gray-50 text-center">
-                <button
-                  onClick={() => {
-                    setSelectedPolygon(null);
-                    if (map.current && geojsonData.features.length > 0) {
-                      const bounds = new mapboxgl.default.LngLatBounds();
-                      geojsonData.features.forEach(feature => {
-                        if (feature.geometry.type === 'Polygon') {
-                          feature.geometry.coordinates[0].forEach(coord => {
-                            bounds.extend(coord);
-                          });
-                        } else if (feature.geometry.type === 'MultiPolygon') {
-                          feature.geometry.coordinates.forEach(polygon => {
-                            polygon[0].forEach(coord => {
+              {selectedPolygon !== null && (
+                <div className="p-2 bg-gray-50 text-center">
+                  <button
+                    onClick={() => {
+                      setSelectedPolygon(null);
+                      if (map.current && geojsonData.features.length > 0 && mapboxglRef.current) {
+                        const bounds = new mapboxglRef.current.LngLatBounds();
+                        geojsonData.features.forEach(feature => {
+                          if (feature.geometry.type === 'Polygon') {
+                            feature.geometry.coordinates[0].forEach(coord => {
                               bounds.extend(coord);
                             });
-                          });
+                          } else if (feature.geometry.type === 'MultiPolygon') {
+                            feature.geometry.coordinates.forEach(polygon => {
+                              polygon[0].forEach(coord => {
+                                bounds.extend(coord);
+                              });
+                            });
+                          }
+                        });
+                        if (!bounds.isEmpty()) {
+                          map.current.fitBounds(bounds, { padding: 50 });
                         }
-                      });
-                      if (!bounds.isEmpty()) {
-                        map.current.fitBounds(bounds, { padding: 50 });
+                        
+                        // Reset colors
+                        if (map.current.getSource('farmers-fields')) {
+                          map.current.setPaintProperty('farmers-fields-fill', 'fill-color', '#3b82f6');
+                          map.current.setPaintProperty('farmers-fields-outline', 'line-color', '#1e40af');
+                        }
                       }
-                      
-                      // Reset colors
-                      if (map.current.getSource('farmers-fields')) {
-                        map.current.setPaintProperty('farmers-fields-fill', 'fill-color', '#3b82f6');
-                        map.current.setPaintProperty('farmers-fields-outline', 'line-color', '#1e40af');
-                      }
-                    }
-                  }}
-                  className="text-xs text-company-teal hover:text-company-turquoise font-medium"
-                >
-                  Show All Fields
-                </button>
-              </div>
+                    }}
+                    className="text-xs text-company-teal hover:text-company-turquoise font-medium"
+                  >
+                    Show All Fields
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
