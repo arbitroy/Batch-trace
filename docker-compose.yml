@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_MAPBOX_ACCESS_TOKEN: pk.eyJ1IjoibW9tdXR1a3UiLCJhIjoiY21ia202M2VoMG9mYjJrc2VubWN0bHNmbCJ9.UibzE6r1LapUVmZOfCNivQ
     container_name: batch-tracer
     restart: unless-stopped
     ports:
