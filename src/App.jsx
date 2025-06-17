@@ -60,87 +60,76 @@ const FarmersMap = ({ farmers }) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(null);
   const [geojsonData, setGeojsonData] = useState(null);
+  const [selectedPolygon, setSelectedPolygon] = useState(null);
+  const [showKey, setShowKey] = useState(false);
 
+  // Function to fly to a specific polygon
+  const flyToPolygon = (feature, index) => {
+    if (!map.current || !feature.geometry) return;
+
+    setSelectedPolygon(index);
+
+    // Calculate bounds for the polygon
+    const bounds = new mapboxgl.default.LngLatBounds();
+    
+    if (feature.geometry.type === 'Polygon') {
+      feature.geometry.coordinates[0].forEach(coord => {
+        bounds.extend(coord);
+      });
+    } else if (feature.geometry.type === 'MultiPolygon') {
+      feature.geometry.coordinates.forEach(polygon => {
+        polygon[0].forEach(coord => {
+          bounds.extend(coord);
+        });
+      });
+    }
+
+    // Fly to the polygon with padding
+    if (!bounds.isEmpty()) {
+      map.current.fitBounds(bounds, { 
+        padding: 100,
+        maxZoom: 15,
+        duration: 1500
+      });
+    }
+
+    // Highlight the selected polygon
+    if (map.current.getSource('farmers-fields')) {
+      // Update the fill layer to highlight selected polygon
+      map.current.setPaintProperty('farmers-fields-fill', 'fill-color', [
+        'case',
+        ['==', ['get', 'fieldGUID'], feature.properties.fieldGUID || ''],
+        '#22c55e', // Green for selected
+        '#3b82f6'  // Blue for others
+      ]);
+      
+      map.current.setPaintProperty('farmers-fields-outline', 'line-color', [
+        'case',
+        ['==', ['get', 'fieldGUID'], feature.properties.fieldGUID || ''],
+        '#15803d', // Dark green for selected
+        '#1e40af'  // Dark blue for others
+      ]);
+    }
+  };
   // Load GeoJSON data from public folder
   const loadGeojsonData = async () => {
     try {
       const response = await fetch('/survey-trial-koen eProd Generated.geojson');
       if (response.ok) {
         const data = await response.json();
+        console.log('Loaded GeoJSON data:', data);
         setGeojsonData(data);
         return data;
       } else {
-        console.warn('GeoJSON file not found, falling back to sample data');
-        return generateFarmerGeojson(farmers);
+        console.warn('GeoJSON file not found');
+        setMapError('GeoJSON file not found. Please ensure the file is in the public folder.');
+        return null;
       }
     } catch (error) {
-      console.warn('Error loading GeoJSON, falling back to sample data:', error);
-      return generateFarmerGeojson(farmers);
+      console.warn('Error loading GeoJSON:', error);
+      setMapError('Error loading field data. Please check the GeoJSON file.');
+      return null;
     }
-  };
-
-  // Generate sample geojson data for farmers with polygons (fallback)
-  const generateFarmerGeojson = (farmers) => {
-    const features = farmers.map((farmer, index) => {
-      // Generate sample polygon coordinates based on farmer location
-      const baseCoords = getBaseCoordinates(farmer.Location);
-      const polygon = generatePolygonAroundPoint(baseCoords, 0.01); // 0.01 degree offset for field boundary
-      
-      return {
-        type: "Feature",
-        properties: {
-          farmerName: farmer.FarmerName,
-          fieldName: farmer.FieldName,
-          groupName: farmer.GroupName,
-          location: farmer.Location,
-          batchNumber: farmer.BatchNumber,
-          batchAmount: farmer.BatchAmount || 0,
-          area: "Sample Data",
-          source: "generated"
-        },
-        geometry: {
-          type: "Polygon",
-          coordinates: [polygon]
-        }
-      };
-    });
-
-    return {
-      type: "FeatureCollection",
-      features: features
-    };
-  };
-
-  // Get base coordinates for different locations in Uganda
-  const getBaseCoordinates = (location) => {
-    const locations = {
-      'Kampala': [32.5825, 0.3476], // Capital city, central Uganda
-      'Mbale': [34.1751, 1.0827], // Eastern region, coffee growing area
-      'Masaka': [31.7340, -0.3539], // Central region, agricultural area
-      'Mbarara': [30.6467, -0.6056], // Western region, livestock and agriculture
-      'Gulu': [32.2995, 2.7796], // Northern region
-      'Jinja': [33.2041, 0.4244], // Eastern region, near Lake Victoria
-      'Mukono': [32.7574, 0.3531], // Central region, near Kampala
-      'Lira': [32.8998, 2.2491], // Northern region
-      'Kasese': [30.0832, 0.1833], // Western region, near mountains
-      'Arua': [30.9107, 3.0197], // Northwestern region
-      'Kara': [34.1751, 1.0827], // Fallback for existing data - mapped to Mbale
-      'Centrale': [32.5825, 0.3476], // Fallback for existing data - mapped to Kampala
-      'default': [32.5825, 0.3476] // Default to Kampala
-    };
-    return locations[location] || locations['default'];
-  };
-
-  // Generate polygon around a point (simple square for demo)
-  const generatePolygonAroundPoint = (center, offset) => {
-    const [lng, lat] = center;
-    return [
-      [lng - offset, lat - offset],
-      [lng + offset, lat - offset],
-      [lng + offset, lat + offset],
-      [lng - offset, lat + offset],
-      [lng - offset, lat - offset] // Close the polygon
-    ];
   };
 
   useEffect(() => {
@@ -167,8 +156,13 @@ const FarmersMap = ({ farmers }) => {
       map.current.on('load', async () => {
         setMapLoaded(true);
         
-        // Load GeoJSON data (either from file or generate sample)
+        // Load GeoJSON data
         const geoData = await loadGeojsonData();
+        
+        if (!geoData || !geoData.features || geoData.features.length === 0) {
+          setMapError('No field data available to display on the map.');
+          return;
+        }
         
         // Add source
         map.current.addSource('farmers-fields', {
@@ -182,11 +176,7 @@ const FarmersMap = ({ farmers }) => {
           type: 'fill',
           source: 'farmers-fields',
           paint: {
-            'fill-color': [
-              'case',
-              ['==', ['get', 'source'], 'generated'], '#10b981', // Green for generated data
-              '#3b82f6' // Blue for real GeoJSON data
-            ],
+            'fill-color': '#3b82f6', // Blue for real GeoJSON data
             'fill-opacity': 0.3
           }
         });
@@ -197,11 +187,7 @@ const FarmersMap = ({ farmers }) => {
           type: 'line',
           source: 'farmers-fields',
           paint: {
-            'line-color': [
-              'case',
-              ['==', ['get', 'source'], 'generated'], '#047857', // Teal for generated data
-              '#1e40af' // Dark blue for real GeoJSON data
-            ],
+            'line-color': '#1e40af', // Dark blue for real GeoJSON data
             'line-width': 2
           }
         });
@@ -210,39 +196,59 @@ const FarmersMap = ({ farmers }) => {
         map.current.on('click', 'farmers-fields-fill', (e) => {
           const properties = e.features[0].properties;
           
-          let popupHTML;
-          if (properties.source === 'generated') {
-            // Popup for generated sample data
-            popupHTML = `
-              <div class="p-4 max-w-sm">
-                <h3 class="font-semibold text-lg text-gray-800 mb-2">${properties.farmerName}</h3>
-                <div class="space-y-1 text-sm">
-                  <div><span class="font-medium">Field:</span> ${properties.fieldName}</div>
-                  <div><span class="font-medium">Group:</span> ${properties.groupName}</div>
-                  <div><span class="font-medium">Location:</span> ${properties.location}</div>
-                  <div><span class="font-medium">Batch:</span> ${properties.batchNumber}</div>
-                  ${properties.batchAmount ? `<div><span class="font-medium">Amount:</span> ${Number(properties.batchAmount).toLocaleString()}</div>` : ''}
-                  <div class="text-xs text-green-600 mt-2">📍 Sample Data</div>
-                </div>
-              </div>
-            `;
-          } else {
-            // Popup for real GeoJSON data
-            popupHTML = `
-              <div class="p-4 max-w-sm">
-                <h3 class="font-semibold text-lg text-gray-800 mb-2">${properties.name || 'Field'}</h3>
-                <div class="space-y-1 text-sm">
-                  <div><span class="font-medium">Area:</span> ${properties.Area ? `${properties.Area} ${properties.Unit || 'ha'}` : 'N/A'}</div>
-                  <div><span class="font-medium">Region:</span> ${properties.Admin_Level_1 || 'N/A'}</div>
-                  <div><span class="font-medium">Country:</span> ${properties.Country || 'N/A'}</div>
-                  ${properties.fieldGUID ? `<div><span class="font-medium">Field ID:</span> ${properties.fieldGUID.substring(0, 8)}...</div>` : ''}
-                  ${properties.risk_timber ? `<div><span class="font-medium">Timber Risk:</span> <span class="px-1 py-0.5 text-xs rounded ${properties.risk_timber === 'high' ? 'bg-red-100 text-red-800' : properties.risk_timber === 'low' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${properties.risk_timber}</span></div>` : ''}
-                  ${properties.Ind_01_treecover ? `<div><span class="font-medium">Tree Cover:</span> ${properties.Ind_01_treecover}</div>` : ''}
-                  <div class="text-xs text-blue-600 mt-2">🗺️ Real Field Data</div>
-                </div>
-              </div>
-            `;
+          // Create popup HTML based on available properties
+          let popupHTML = `
+            <div class="p-4 max-w-sm">
+              <h3 class="font-semibold text-lg text-gray-800 mb-2">${properties.name || properties.fieldName || 'Field'}</h3>
+              <div class="space-y-1 text-sm">
+          `;
+
+          // Add available property information
+          if (properties.Area) {
+            popupHTML += `<div><span class="font-medium">Area:</span> ${properties.Area} ${properties.Unit || 'ha'}</div>`;
           }
+          
+          if (properties.Admin_Level_1) {
+            popupHTML += `<div><span class="font-medium">Region:</span> ${properties.Admin_Level_1}</div>`;
+          }
+          
+          if (properties.Country) {
+            popupHTML += `<div><span class="font-medium">Country:</span> ${properties.Country}</div>`;
+          }
+          
+          if (properties.fieldGUID) {
+            popupHTML += `<div><span class="font-medium">Field ID:</span> ${properties.fieldGUID.substring(0, 8)}...</div>`;
+          }
+          
+          if (properties.risk_timber) {
+            const riskClass = properties.risk_timber === 'high' ? 'bg-red-100 text-red-800' : 
+                             properties.risk_timber === 'low' ? 'bg-green-100 text-green-800' : 
+                             'bg-yellow-100 text-yellow-800';
+            popupHTML += `<div><span class="font-medium">Timber Risk:</span> <span class="px-1 py-0.5 text-xs rounded ${riskClass}">${properties.risk_timber}</span></div>`;
+          }
+          
+          if (properties.Ind_01_treecover) {
+            popupHTML += `<div><span class="font-medium">Tree Cover:</span> ${properties.Ind_01_treecover}</div>`;
+          }
+
+          // Add any farmer-specific data if available
+          if (properties.farmerName) {
+            popupHTML += `<div><span class="font-medium">Farmer:</span> ${properties.farmerName}</div>`;
+          }
+          
+          if (properties.groupName) {
+            popupHTML += `<div><span class="font-medium">Group:</span> ${properties.groupName}</div>`;
+          }
+          
+          if (properties.batchNumber) {
+            popupHTML += `<div><span class="font-medium">Batch:</span> ${properties.batchNumber}</div>`;
+          }
+
+          popupHTML += `
+                <div class="text-xs text-blue-600 mt-2">🗺️ Real Field Data</div>
+              </div>
+            </div>
+          `;
           
           new mapboxgl.default.Popup()
             .setLngLat(e.lngLat)
@@ -262,14 +268,25 @@ const FarmersMap = ({ farmers }) => {
         // Fit map to show all features
         if (geoData.features.length > 0) {
           const bounds = new mapboxgl.default.LngLatBounds();
+          
           geoData.features.forEach(feature => {
             if (feature.geometry.type === 'Polygon') {
               feature.geometry.coordinates[0].forEach(coord => {
                 bounds.extend(coord);
               });
+            } else if (feature.geometry.type === 'MultiPolygon') {
+              feature.geometry.coordinates.forEach(polygon => {
+                polygon[0].forEach(coord => {
+                  bounds.extend(coord);
+                });
+              });
             }
           });
-          map.current.fitBounds(bounds, { padding: 50 });
+          
+          // Only fit bounds if we have valid bounds
+          if (!bounds.isEmpty()) {
+            map.current.fitBounds(bounds, { padding: 50 });
+          }
         }
       });
 
@@ -307,6 +324,103 @@ const FarmersMap = ({ farmers }) => {
   return (
     <div className="relative">
       <div ref={mapContainer} className="h-96 rounded-lg overflow-hidden" />
+      
+      {/* Map Key/Legend */}
+      {geojsonData && geojsonData.features && geojsonData.features.length > 0 && (
+        <div className="absolute top-4 right-4 z-10">
+          <button
+            onClick={() => setShowKey(!showKey)}
+            className="bg-white rounded-lg shadow-lg p-3 mb-2 hover:bg-gray-50 transition-colors"
+            title="Toggle Fields List"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+          </button>
+
+          {showKey && (
+            <div className="bg-white rounded-lg shadow-lg max-w-xs w-80 max-h-80 overflow-hidden">
+              <div className="p-3 bg-company-teal text-white">
+                <h3 className="font-semibold text-sm">Fields ({geojsonData.features.length})</h3>
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {geojsonData.features.map((feature, index) => {
+                  const props = feature.properties;
+                  const isSelected = selectedPolygon === index;
+                  
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => flyToPolygon(feature, index)}
+                      className={`w-full text-left p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                        isSelected ? 'bg-green-50 border-l-4 border-l-green-500' : ''
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        <div className={`w-3 h-3 rounded-full mr-3 mt-1 flex-shrink-0 ${
+                          isSelected ? 'bg-green-500' : 'bg-blue-500'
+                        }`}></div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm text-gray-900 truncate">
+                            {props.name || props.fieldName || `Field ${index + 1}`}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {props.Area && (
+                              <div>Area: {props.Area} {props.Unit || 'ha'}</div>
+                            )}
+                            {props.Admin_Level_1 && (
+                              <div>Region: {props.Admin_Level_1}</div>
+                            )}
+                            {props.fieldGUID && (
+                              <div>ID: {props.fieldGUID.substring(0, 8)}...</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="p-2 bg-gray-50 text-center">
+                <button
+                  onClick={() => {
+                    setSelectedPolygon(null);
+                    if (map.current && geojsonData.features.length > 0) {
+                      const bounds = new mapboxgl.default.LngLatBounds();
+                      geojsonData.features.forEach(feature => {
+                        if (feature.geometry.type === 'Polygon') {
+                          feature.geometry.coordinates[0].forEach(coord => {
+                            bounds.extend(coord);
+                          });
+                        } else if (feature.geometry.type === 'MultiPolygon') {
+                          feature.geometry.coordinates.forEach(polygon => {
+                            polygon[0].forEach(coord => {
+                              bounds.extend(coord);
+                            });
+                          });
+                        }
+                      });
+                      if (!bounds.isEmpty()) {
+                        map.current.fitBounds(bounds, { padding: 50 });
+                      }
+                      
+                      // Reset colors
+                      if (map.current.getSource('farmers-fields')) {
+                        map.current.setPaintProperty('farmers-fields-fill', 'fill-color', '#3b82f6');
+                        map.current.setPaintProperty('farmers-fields-outline', 'line-color', '#1e40af');
+                      }
+                    }
+                  }}
+                  className="text-xs text-company-teal hover:text-company-turquoise font-medium"
+                >
+                  Show All Fields
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {!mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
           <div className="text-center">
