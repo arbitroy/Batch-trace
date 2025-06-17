@@ -661,10 +661,6 @@ function App() {
     );
   }
 
-  // Get unique batch numbers and calculate batch amounts
-  const uniqueBatchNumbers = orderData?.farmers
-    ? [...new Set(orderData.farmers.map(farmer => farmer.BatchNumber))]
-    : [];
 
   const batchAmounts = orderData?.farmers
     ? orderData.farmers.reduce((acc, farmer) => {
@@ -695,7 +691,7 @@ function App() {
 
         <div className="p-4 md:p-6">
           {/* Purchase Information Card */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
             <div className="bg-company-sky/10 rounded-lg p-4 md:p-5">
               <div className="flex items-center mb-3">
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-company-teal flex items-center justify-center text-white mr-3">
@@ -708,36 +704,6 @@ function App() {
               </div>
               <div className="bg-white py-2 px-3 md:py-3 md:px-4 rounded border border-gray-200 text-center text-lg md:text-xl">
                 {orderData?.OrderNumber || 'N/A'}
-              </div>
-            </div>
-
-            <div className="bg-company-sky/10 rounded-lg p-4 md:p-5">
-              <div className="flex items-center mb-3">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-company-teal flex items-center justify-center text-white mr-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <label className="text-sm md:text-base font-medium text-company-turquoise">
-                  Batch Number{uniqueBatchNumbers.length > 1 ? 's' : ''}
-                </label>
-              </div>
-              <div className="bg-white py-2 px-3 md:py-3 md:px-4 rounded border border-gray-200">
-                {uniqueBatchNumbers.length > 0 ? (
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {uniqueBatchNumbers.map((batchNumber, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 md:px-3 md:py-1.5 bg-company-sky/20 text-company-teal rounded text-sm md:text-base font-medium"
-                      >
-                        {batchNumber}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-lg md:text-xl text-company-teal">N/A</div>
-                )}
               </div>
             </div>
 
