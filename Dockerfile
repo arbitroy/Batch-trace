@@ -9,6 +9,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
+
+ARG VITE_MAPBOX_ACCESS_TOKEN
+ENV VITE_MAPBOX_ACCESS_TOKEN=$VITE_MAPBOX_ACCESS_TOKEN
+
 # Copy the rest of the frontend code
 COPY . .
 
