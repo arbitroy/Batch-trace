@@ -54,7 +54,7 @@ const IconByType = ({ type }) => {
 };
 
 // Mapbox Map Component
-const FarmersMap = ({ farmers }) => {
+const FarmersMap = ({ farmers, orderData, isActive }) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const mapboxglRef = useRef(null);
@@ -62,7 +62,8 @@ const FarmersMap = ({ farmers }) => {
   const [mapError, setMapError] = useState(null);
   const [geojsonData, setGeojsonData] = useState(null);
   const [selectedPolygon, setSelectedPolygon] = useState(null);
-  const [showKey, setShowKey] = useState(false);
+  const [showKey, setShowKey] = useState(true);
+  const [hasFlownToFirst, setHasFlownToFirst] = useState(false);
 
   // Function to fly to a specific polygon
   const flyToPolygon = (feature, index) => {
@@ -113,23 +114,68 @@ const FarmersMap = ({ farmers }) => {
     }
   };
   
-  // Load GeoJSON data from public folder
+  // Load GeoJSON data from orderData documents
   const loadGeojsonData = async () => {
     try {
-      const response = await fetch('/survey-trial-koen eProd Generated.geojson');
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Loaded GeoJSON data:', data);
-        setGeojsonData(data);
-        return data;
-      } else {
-        console.warn('GeoJSON file not found');
-        setMapError('GeoJSON file not found. Please ensure the file is in the public folder.');
+      if (!orderData?.documents) {
+        console.warn('No documents available in orderData');
+        setMapError('No documents available to extract field data.');
         return null;
       }
+
+      // Find documents that contain GeoJSON data
+      const geojsonDoc = orderData.documents.find(doc => 
+        doc.documentType && 
+        (doc.documentType.toLowerCase().includes('geojson') || 
+         doc.documentType.toLowerCase().includes('polygon') ||
+         doc.documentName?.toLowerCase().includes('.geojson'))
+      );
+
+      if (!geojsonDoc) {
+        console.warn('No GeoJSON document found in orderData');
+        setMapError('No field boundary data found in the order documents.');
+        return null;
+      }
+
+      if (!geojsonDoc.documentBase64) {
+        console.warn('GeoJSON document has no base64 data');
+        setMapError('Field boundary document is empty.');
+        return null;
+      }
+
+      // Decode the base64 data
+      let decodedData;
+      try {
+        decodedData = atob(geojsonDoc.documentBase64);
+      } catch (error) {
+        console.error('Error decoding base64:', error);
+        setMapError('Error decoding field boundary data.');
+        return null;
+      }
+
+      // Parse as JSON
+      let geoJsonData;
+      try {
+        geoJsonData = JSON.parse(decodedData);
+      } catch (error) {
+        console.error('Error parsing GeoJSON:', error);
+        setMapError('Error parsing field boundary data.');
+        return null;
+      }
+
+      // Validate it's a proper GeoJSON
+      if (!geoJsonData.type || geoJsonData.type !== 'FeatureCollection') {
+        console.warn('Invalid GeoJSON format');
+        setMapError('Invalid field boundary data format.');
+        return null;
+      }
+
+      console.log('Loaded GeoJSON data from documents:', geoJsonData);
+      setGeojsonData(geoJsonData);
+      return geoJsonData;
     } catch (error) {
       console.warn('Error loading GeoJSON:', error);
-      setMapError('Error loading field data. Please check the GeoJSON file.');
+      setMapError('Error loading field data. Please check the document format.');
       return null;
     }
   };
@@ -290,6 +336,14 @@ const FarmersMap = ({ farmers }) => {
           if (!bounds.isEmpty()) {
             map.current.fitBounds(bounds, { padding: 50 });
           }
+
+          // Automatically fly to the first polygon when map becomes active
+          if (isActive && !hasFlownToFirst) {
+            setTimeout(() => {
+              flyToPolygon(geoData.features[0], 0);
+              setHasFlownToFirst(true);
+            }, 800); // Small delay to ensure map is fully loaded
+          }
         }
       });
 
@@ -308,7 +362,22 @@ const FarmersMap = ({ farmers }) => {
         map.current = null;
       }
     };
-  }, [farmers]);
+  }, [farmers, orderData]);
+
+  // Effect to handle flying to first polygon when tab becomes active
+  useEffect(() => {
+    if (isActive && mapLoaded && geojsonData?.features?.length > 0 && !hasFlownToFirst) {
+      setTimeout(() => {
+        flyToPolygon(geojsonData.features[0], 0);
+        setHasFlownToFirst(true);
+      }, 500);
+    }
+    
+    // Reset the flag when tab becomes inactive so it can fly again when reactivated
+    if (!isActive) {
+      setHasFlownToFirst(false);
+    }
+  }, [isActive, mapLoaded, geojsonData, hasFlownToFirst]);
 
   if (mapError) {
     return (
@@ -333,12 +402,24 @@ const FarmersMap = ({ farmers }) => {
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={() => setShowKey(!showKey)}
-            className="bg-white rounded-lg shadow-lg p-3 mb-2 hover:bg-gray-50 transition-colors"
-            title="Toggle Fields List"
+            className="bg-white rounded-lg shadow-lg p-3 mb-2 hover:bg-gray-50 transition-colors flex items-center space-x-2"
+            title={showKey ? "Hide Fields List" : "Show Fields List"}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
+            {showKey ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <span className="text-sm text-gray-700 font-medium">Hide</span>
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                <span className="text-sm text-gray-700 font-medium">Fields</span>
+              </>
+            )}
           </button>
 
           {showKey && (
@@ -378,6 +459,7 @@ const FarmersMap = ({ farmers }) => {
                   <button
                     onClick={() => {
                       setSelectedPolygon(null);
+                      // Don't reset hasFlownToFirst here - user wants to see ALL fields, not fly to first
                       if (map.current && geojsonData.features.length > 0 && mapboxglRef.current) {
                         const bounds = new mapboxglRef.current.LngLatBounds();
                         geojsonData.features.forEach(feature => {
@@ -394,10 +476,13 @@ const FarmersMap = ({ farmers }) => {
                           }
                         });
                         if (!bounds.isEmpty()) {
-                          map.current.fitBounds(bounds, { padding: 50 });
+                          map.current.fitBounds(bounds, { 
+                            padding: 50,
+                            duration: 1500 // Smooth transition to show all fields
+                          });
                         }
                         
-                        // Reset colors
+                        // Reset colors to show no selection
                         if (map.current.getSource('farmers-fields')) {
                           map.current.setPaintProperty('farmers-fields-fill', 'fill-color', '#3b82f6');
                           map.current.setPaintProperty('farmers-fields-outline', 'line-color', '#1e40af');
@@ -450,6 +535,26 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('list'); // 'list' or 'map'
+
+  // Helper function to check if there are GeoJSON documents available
+  const hasGeojsonData = () => {
+    if (!orderData?.documents) return false;
+    
+    return orderData.documents.some(doc => 
+      doc.documentType && 
+      (doc.documentType.toLowerCase().includes('geojson') || 
+       doc.documentType.toLowerCase().includes('polygon') ||
+       doc.documentName?.toLowerCase().includes('.geojson')) &&
+      doc.documentBase64
+    );
+  };
+
+  // Reset active tab to 'list' if we're on 'map' tab but no GeoJSON data is available
+  useEffect(() => {
+    if (activeTab === 'map' && !hasGeojsonData()) {
+      setActiveTab('list');
+    }
+  }, [orderData, activeTab]);
 
   useEffect(() => {
     // Function to extract and decode the base64 string from the URL path
@@ -859,17 +964,19 @@ function App() {
                 >
                   Farmers List
                 </TabButton>
-                <TabButton
-                  active={activeTab === 'map'}
-                  onClick={() => setActiveTab('map')}
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z" clipRule="evenodd" />
-                    </svg>
-                  }
-                >
-                  Fields Map
-                </TabButton>
+                {hasGeojsonData() && (
+                  <TabButton
+                    active={activeTab === 'map'}
+                    onClick={() => setActiveTab('map')}
+                    icon={
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z" clipRule="evenodd" />
+                      </svg>
+                    }
+                  >
+                    Fields Map
+                  </TabButton>
+                )}
               </div>
 
               {/* Tab Content */}
@@ -985,9 +1092,9 @@ function App() {
                   </div>
                 )}
 
-                {activeTab === 'map' && (
+                {activeTab === 'map' && hasGeojsonData() && (
                   <div className="p-4">
-                    <FarmersMap farmers={orderData.farmers} />
+                    <FarmersMap farmers={orderData.farmers} orderData={orderData} isActive={activeTab === 'map'} />
                   </div>
                 )}
               </div>
