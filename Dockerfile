@@ -36,6 +36,9 @@ COPY server.cjs ./
 # Copy the built React app from the previous stage
 COPY --from=frontend-builder /app/dist ./dist
 
+# Set NODE_ENV to production
+ENV NODE_ENV=production
+
 # Expose the port the server listens on
 EXPOSE 3000
 

@@ -125,7 +125,7 @@ const FarmersMap = ({ farmers, orderData, isActive }) => {
 
       // Find documents that contain GeoJSON data
       const geojsonDoc = orderData.documents.find(doc => 
-        doc.documentType && 
+        doc.documentType &&
         (doc.documentType.toLowerCase().includes('geojson') || 
          doc.documentType.toLowerCase().includes('polygon') ||
          doc.documentName?.toLowerCase().includes('.geojson'))
