@@ -54,7 +54,6 @@ export const loadGeojsonData = async (orderData, setMapError) => {
             return null;
         }
 
-        console.log('Loaded GeoJSON data from documents:', geoJsonData);
         return geoJsonData;
     } catch (error) {
         console.warn('Error loading GeoJSON:', error);
