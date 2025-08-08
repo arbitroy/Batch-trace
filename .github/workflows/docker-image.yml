@@ -38,4 +38,10 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: austinedev/batchtrace:latest
+          tags: |
+            austinedev/batchtrace:latest
+            austinedev/batchtrace:${{ github.sha }}
+          build-args: |
+            VITE_MAPBOX_ACCESS_TOKEN=${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
