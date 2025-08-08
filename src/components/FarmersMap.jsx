@@ -47,6 +47,28 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
         }
     };
 
+    // Helper function to create location info object from feature
+    const createLocationInfo = (feature, index, coordinates = null) => {
+        const properties = feature.properties;
+        const coords = coordinates || extractCoordinatesFromFeature(feature);
+        
+        return {
+            name: properties.name || properties.fieldName || 'Location',
+            area: properties.Area ? parseFloat(properties.Area).toFixed(4) : null,
+            unit: properties.Unit || 'ha',
+            region: properties.Admin_Level_1,
+            country: properties.Country,
+            farmerName: properties.farmerName,
+            featureType: feature.geometry.type === 'Point' ? 'Point Location' : 'Field Boundary',
+            coordinates: coords,
+            index: index,
+            // Risk assessments
+            riskPcrop: properties.risk_pcrop,
+            riskAcrop: properties.risk_acrop,
+            riskTimber: properties.risk_timber
+        };
+    };
+
     const clearMarkers = () => {
         markersRef.current.forEach(marker => marker.remove());
         markersRef.current = [];
@@ -67,7 +89,7 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
 
             el.innerHTML = `
                 <svg class="marker-svg" width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path class="marker-pin-path" d="M22 2C10.95 2 2 10.95 2 22C2 27 4 31.5 7 34.5L22 52L37 34.5C40 31.5 42 27 42 22C42 10.95 33.05 2 22 2Z" 
+                    <path class="marker-pin-path" d="M22 2C10.95 2 2 10.95 2 22C2 27 4 31.5 7 34.5L22 52L37 34.5C40 31.5 42 27 42 22C42 10.95 33.05 0 22 2Z" 
                           fill="${feature.geometry.type === 'Point' ? '#22c55e' : '#3b82f6'}" 
                           stroke="#ffffff" 
                           stroke-width="3"/>
@@ -84,25 +106,9 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
                 .addTo(map.current);
 
             el.addEventListener('click', () => {
-                const properties = feature.properties;
-                
-                // Set the selected location info instead of creating a popup
-                setSelectedLocationInfo({
-                    name: properties.name || properties.fieldName || 'Location',
-                    area: properties.Area ? parseFloat(properties.Area).toFixed(4) : null,
-                    unit: properties.Unit || 'ha',
-                    region: properties.Admin_Level_1,
-                    country: properties.Country,
-                    farmerName: properties.farmerName,
-                    featureType: feature.geometry.type === 'Point' ? 'Point Location' : 'Field Boundary',
-                    coordinates: coords,
-                    index: index,
-                    // Risk assessments
-                    riskPcrop: properties.risk_pcrop,
-                    riskAcrop: properties.risk_acrop,
-                    riskTimber: properties.risk_timber
-                });
-
+                // Create location info and set it
+                const locationInfo = createLocationInfo(feature, index, coords);
+                setSelectedLocationInfo(locationInfo);
                 flyToFeature(feature, index);
             });
 
@@ -114,6 +120,13 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
         if (!map.current || !feature.geometry || !mapboxglRef.current) return;
 
         setSelectedFeature(index);
+
+        // Update the popup info when flying to a feature
+        const coords = extractCoordinatesFromFeature(feature);
+        if (coords) {
+            const locationInfo = createLocationInfo(feature, index, coords);
+            setSelectedLocationInfo(locationInfo);
+        }
 
         if (feature.geometry.type === 'Point') {
             const [lng, lat] = feature.geometry.coordinates;
