@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapFieldsList } from './MapFieldsList';
+import { RiskFilters } from './RiskFilters';
 import { loadGeojsonData, extractCoordinatesFromFeature } from '../utils/mapHelpers';
 
 export const FarmersMap = ({ farmers, orderData, isActive }) => {
@@ -10,10 +11,12 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
     const [mapLoaded, setMapLoaded] = useState(false);
     const [mapError, setMapError] = useState(null);
     const [geojsonData, setGeojsonData] = useState(null);
+    const [filteredFeatures, setFilteredFeatures] = useState(null);
     const [selectedFeature, setSelectedFeature] = useState(null);
     const [showKey, setShowKey] = useState(true);
     const [hasFlownToFirst, setHasFlownToFirst] = useState(false);
     const [selectedLocationInfo, setSelectedLocationInfo] = useState(null);
+    const [activeFilters, setActiveFilters] = useState({});
 
     // Helper function to format risk values
     const formatRiskValue = (risk) => {
@@ -45,6 +48,66 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
             default:
                 return 'bg-gray-100 text-gray-800';
         }
+    };
+
+    // Filter features based on active risk filters
+    const applyRiskFilters = (features) => {
+        if (!features || Object.keys(activeFilters).length === 0) {
+            return features;
+        }
+
+        return features.filter(feature => {
+            const props = feature.properties;
+            
+            // Check each active filter
+            for (const [riskType, riskLevel] of Object.entries(activeFilters)) {
+                const propertyName = `risk_${riskType.slice(4).toLowerCase()}`;
+                const featureRisk = props[propertyName];
+                
+                if (!featureRisk) {
+                    // If feature doesn't have risk data and we're filtering for 'unknown', include it
+                    if (riskLevel === 'unknown') continue;
+                    else return false;
+                }
+                
+                const normalizedRisk = featureRisk.toLowerCase();
+                if (normalizedRisk !== riskLevel) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+    };
+
+    // Update filtered features when filters change
+    useEffect(() => {
+        if (geojsonData?.features) {
+            const filtered = applyRiskFilters(geojsonData.features);
+            setFilteredFeatures(filtered);
+        }
+    }, [geojsonData, activeFilters]);
+
+    // Handle filter changes
+    const handleFilterChange = (riskType, riskLevel, clearAll = false) => {
+        if (clearAll) {
+            setActiveFilters({});
+            return;
+        }
+
+        setActiveFilters(prev => {
+            const newFilters = { ...prev };
+            
+            // If the same filter is clicked, remove it (toggle off)
+            if (newFilters[riskType] === riskLevel) {
+                delete newFilters[riskType];
+            } else {
+                // Set or update the filter for this risk type
+                newFilters[riskType] = riskLevel;
+            }
+            
+            return newFilters;
+        });
     };
 
     // Helper function to create location info object from feature
@@ -87,14 +150,26 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
             el.className = 'custom-marker';
             el.style.cursor = 'pointer';
 
+            // Check if this feature is filtered out
+            const isVisible = filteredFeatures ? filteredFeatures.includes(feature) : true;
+            
+            // Get marker color based on highest risk
+            let markerColor = feature.geometry.type === 'Point' ? '#22c55e' : '#3b82f6';
+            const risks = [feature.properties.risk_pcrop, feature.properties.risk_acrop, feature.properties.risk_timber];
+            if (risks.some(risk => risk?.toLowerCase() === 'high')) {
+                markerColor = '#ef4444'; // Red for high risk
+            } else if (risks.some(risk => risk?.toLowerCase() === 'medium')) {
+                markerColor = '#f59e0b'; // Orange for medium risk
+            }
+
             el.innerHTML = `
-                <svg class="marker-svg" width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg class="marker-svg" width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: ${isVisible ? '1' : '0.3'}">
                     <path class="marker-pin-path" d="M22 2C10.95 2 2 10.95 2 22C2 27 4 31.5 7 34.5L22 52L37 34.5C40 31.5 42 27 42 22C42 10.95 33.05 0 22 2Z" 
-                          fill="${feature.geometry.type === 'Point' ? '#22c55e' : '#3b82f6'}" 
+                          fill="${markerColor}" 
                           stroke="#ffffff" 
                           stroke-width="3"/>
                     <circle cx="22" cy="22" r="8" fill="white"/>
-                    <circle cx="22" cy="22" r="5" fill="${feature.geometry.type === 'Point' ? '#22c55e' : '#3b82f6'}"/>
+                    <circle cx="22" cy="22" r="5" fill="${markerColor}"/>
                 </svg>
             `;
 
@@ -106,15 +181,49 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
                 .addTo(map.current);
 
             el.addEventListener('click', () => {
-                // Create location info and set it
-                const locationInfo = createLocationInfo(feature, index, coords);
-                setSelectedLocationInfo(locationInfo);
-                flyToFeature(feature, index);
+                if (isVisible) {
+                    // Create location info and set it
+                    const locationInfo = createLocationInfo(feature, index, coords);
+                    setSelectedLocationInfo(locationInfo);
+                    flyToFeature(feature, index);
+                }
             });
 
             markersRef.current.push(marker);
         });
     };
+
+    // Update markers when filtered features change
+    useEffect(() => {
+        if (geojsonData?.features && mapLoaded) {
+            addMarkers(geojsonData.features);
+            
+            // Update polygon layer opacity based on filters
+            if (map.current.getSource('farmers-fields')) {
+                const visibleFeatureIds = filteredFeatures?.map(f => f.properties.fieldGUID || f.properties.name) || [];
+                
+                if (Object.keys(activeFilters).length > 0) {
+                    // Apply filter-based opacity
+                    map.current.setPaintProperty('farmers-fields-fill', 'fill-opacity', [
+                        'case',
+                        ['in', ['get', 'fieldGUID'], ['literal', visibleFeatureIds]],
+                        0.3,
+                        0.1
+                    ]);
+                    map.current.setPaintProperty('farmers-fields-outline', 'line-opacity', [
+                        'case',
+                        ['in', ['get', 'fieldGUID'], ['literal', visibleFeatureIds]],
+                        1,
+                        0.3
+                    ]);
+                } else {
+                    // Reset to default opacity
+                    map.current.setPaintProperty('farmers-fields-fill', 'fill-opacity', 0.3);
+                    map.current.setPaintProperty('farmers-fields-outline', 'line-opacity', 1);
+                }
+            }
+        }
+    }, [filteredFeatures, geojsonData, mapLoaded, activeFilters]);
     
     const flyToFeature = (feature, index) => {
         if (!map.current || !feature.geometry || !mapboxglRef.current) return;
@@ -184,17 +293,12 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
             svgEl.setAttribute('height', '54');
             svgEl.setAttribute('viewBox', '0 0 44 54');
             el.style.zIndex = '1';
-            
-            if (geojsonData.features[i].geometry.type === 'Point') {
-                pinPath.setAttribute('fill', '#22c55e');
-            } else {
-                pinPath.setAttribute('fill', '#3b82f6');
-            }
         });
 
-        if (map.current && geojsonData?.features?.length > 0 && mapboxglRef.current) {
+        const featuresToShow = filteredFeatures || geojsonData?.features || [];
+        if (map.current && featuresToShow.length > 0 && mapboxglRef.current) {
             const bounds = new mapboxglRef.current.LngLatBounds();
-            geojsonData.features.forEach(feature => {
+            featuresToShow.forEach(feature => {
                 if (feature.geometry.type === 'Point') {
                     bounds.extend(feature.geometry.coordinates);
                 } else if (feature.geometry.type === 'Polygon') {
@@ -257,6 +361,7 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
                     return;
                 }
                 setGeojsonData(geoData);
+                setFilteredFeatures(geoData.features); // Initially show all
                 const polygonFeatures = geoData.features.filter(f => f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon');
 
                 if (polygonFeatures.length > 0) {
@@ -348,9 +453,18 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
         <div className="relative">
             <div ref={mapContainer} className="h-[600px] rounded-lg overflow-hidden" />
             
+            {/* Risk Filters */}
+            {geojsonData && (
+                <RiskFilters 
+                    geojsonData={geojsonData} 
+                    onFilterChange={handleFilterChange} 
+                    activeFilters={activeFilters}
+                />
+            )}
+
             {/* Custom Location Info Card */}
             {selectedLocationInfo && (
-                <div className="absolute top-4 left-4 z-20 bg-white rounded-xl shadow-xl border border-gray-200 max-w-sm">
+                <div className="absolute top-4 left-4 z-30 bg-white rounded-xl shadow-xl border border-gray-200 max-w-sm ml-80">
                     <div className="p-4">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-3">
@@ -478,7 +592,7 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
 
             {geojsonData && geojsonData.features && geojsonData.features.length > 0 && (
                 <MapFieldsList 
-                    geojsonData={geojsonData} 
+                    geojsonData={filteredFeatures ? { ...geojsonData, features: filteredFeatures } : geojsonData}
                     selectedFeature={selectedFeature} 
                     showKey={showKey} 
                     setShowKey={setShowKey} 
