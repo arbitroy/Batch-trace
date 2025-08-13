@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapFieldsList } from './MapFieldsList';
 import { loadGeojsonData, extractCoordinatesFromFeature } from '../utils/mapHelpers';
 
-export const FarmersMap = ({ farmers, orderData, isActive }) => {
+export const FarmersMap = ({ farmers, orderData, isActive, selectedFieldIndex, onFieldSelect, selectedFromRiskAssessment = false }) => {
     const mapContainer = useRef(null);
     const map = useRef(null);
     const mapboxglRef = useRef(null);
@@ -10,10 +10,20 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
     const [mapLoaded, setMapLoaded] = useState(false);
     const [mapError, setMapError] = useState(null);
     const [geojsonData, setGeojsonData] = useState(null);
-    const [selectedFeature, setSelectedFeature] = useState(null);
+    const [selectedFeature, setSelectedFeature] = useState(selectedFieldIndex);
     const [showKey, setShowKey] = useState(true);
     const [hasFlownToFirst, setHasFlownToFirst] = useState(false);
     const [selectedLocationInfo, setSelectedLocationInfo] = useState(null);
+
+    // Update selectedFeature when selectedFieldIndex changes externally
+    useEffect(() => {
+        if (selectedFieldIndex !== null && selectedFieldIndex !== selectedFeature) {
+            setSelectedFeature(selectedFieldIndex);
+            if (geojsonData?.features?.[selectedFieldIndex] && mapLoaded) {
+                flyToFeature(geojsonData.features[selectedFieldIndex], selectedFieldIndex);
+            }
+        }
+    }, [selectedFieldIndex, geojsonData, mapLoaded, selectedFeature]);
 
     // Helper function to format risk values
     const formatRiskValue = (risk) => {
@@ -87,8 +97,11 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
             el.className = 'custom-marker';
             el.style.cursor = 'pointer';
 
+            // Determine if this marker should be highlighted (selected)
+            const isSelected = selectedFieldIndex === index;
+
             el.innerHTML = `
-                <svg class="marker-svg" width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg class="marker-svg" width="${isSelected ? '56' : '44'}" height="${isSelected ? '69' : '54'}" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path class="marker-pin-path" d="M22 2C10.95 2 2 10.95 2 22C2 27 4 31.5 7 34.5L22 52L37 34.5C40 31.5 42 27 42 22C42 10.95 33.05 0 22 2Z" 
                           fill="${feature.geometry.type === 'Point' ? '#22c55e' : '#3b82f6'}" 
                           stroke="#ffffff" 
@@ -97,6 +110,9 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
                     <circle cx="22" cy="22" r="5" fill="${feature.geometry.type === 'Point' ? '#22c55e' : '#3b82f6'}"/>
                 </svg>
             `;
+
+            // Set z-index for selected marker
+            el.style.zIndex = isSelected ? '1000' : '1';
 
             const marker = new mapboxglRef.current.Marker({
                 element: el,
@@ -110,6 +126,10 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
                 const locationInfo = createLocationInfo(feature, index, coords);
                 setSelectedLocationInfo(locationInfo);
                 flyToFeature(feature, index);
+                // Notify parent component about field selection
+                if (onFieldSelect) {
+                    onFieldSelect(index);
+                }
             });
 
             markersRef.current.push(marker);
@@ -144,7 +164,7 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
             }
         }
         
-        // Resize SVG instead of using transform:scale
+        // Update marker sizes and styles
         markersRef.current.forEach((marker, i) => {
             const el = marker.getElement();
             const svgEl = el.querySelector('.marker-svg');
@@ -167,11 +187,21 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
             map.current.setPaintProperty('farmers-fields-fill', 'fill-color', ['case', ['==', ['get', 'fieldGUID'], feature.properties.fieldGUID || ''], '#22c55e', '#3b82f6']);
             map.current.setPaintProperty('farmers-fields-outline', 'line-color', ['case', ['==', ['get', 'fieldGUID'], feature.properties.fieldGUID || ''], '#15803d', '#1e40af']);
         }
+
+        // Notify parent component about field selection
+        if (onFieldSelect) {
+            onFieldSelect(index);
+        }
     };
 
     const showAllFields = () => {
         setSelectedFeature(null);
         setSelectedLocationInfo(null);
+
+        // Notify parent component that no field is selected
+        if (onFieldSelect) {
+            onFieldSelect(null);
+        }
 
         markersRef.current.forEach((marker, i) => {
             const el = marker.getElement();
@@ -306,8 +336,18 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
                         }
                     });
                     if (!bounds.isEmpty()) map.current.fitBounds(bounds, { padding: 50 });
-                    if (isActive && !hasFlownToFirst) {
-                        setTimeout(() => { flyToFeature(geoData.features[0], 0); setHasFlownToFirst(true); }, 800);
+                    
+                    // If we have a pre-selected field, fly to it
+                    if (selectedFieldIndex !== null && selectedFieldIndex !== undefined) {
+                        setTimeout(() => {
+                            flyToFeature(geoData.features[selectedFieldIndex], selectedFieldIndex);
+                            setHasFlownToFirst(true);
+                        }, 800);
+                    } else if (isActive && !hasFlownToFirst) {
+                        setTimeout(() => { 
+                            flyToFeature(geoData.features[0], 0); 
+                            setHasFlownToFirst(true); 
+                        }, 800);
                     }
                 }
             });
@@ -325,11 +365,11 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
     }, [farmers, orderData]);
 
     useEffect(() => {
-        if (isActive && mapLoaded && geojsonData?.features?.length > 0 && !hasFlownToFirst) {
+        if (isActive && mapLoaded && geojsonData?.features?.length > 0 && !hasFlownToFirst && selectedFieldIndex === null) {
             setTimeout(() => { flyToFeature(geojsonData.features[0], 0); setHasFlownToFirst(true); }, 500);
         }
         if (!isActive) setHasFlownToFirst(false);
-    }, [isActive, mapLoaded, geojsonData, hasFlownToFirst]);
+    }, [isActive, mapLoaded, geojsonData, hasFlownToFirst, selectedFieldIndex]);
 
     if (mapError) { 
         return ( 
@@ -346,11 +386,37 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
 
     return (
         <div className="relative">
-            <div ref={mapContainer} className="h-[600px] rounded-lg overflow-hidden" />
+            {/* Show selected field indicator only when selected from Risk Assessment */}
+            {selectedFieldIndex !== null && selectedFromRiskAssessment && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg relative z-10">
+                    <div className="flex items-center text-sm text-blue-800">
+                        <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="font-medium flex-1">
+                            {geojsonData?.features?.[selectedFieldIndex]?.properties?.name || 
+                             geojsonData?.features?.[selectedFieldIndex]?.properties?.fieldName || 
+                             `Field ${selectedFieldIndex + 1}`} selected from Risk Assessment
+                        </span>
+                        <button
+                            onClick={showAllFields}
+                            className="ml-auto text-blue-600 hover:text-blue-800 font-medium flex-shrink-0"
+                        >
+                            Clear Selection
+                        </button>
+                    </div>
+                </div>
+            )}
             
-            {/* Custom Location Info Card */}
+            <div ref={mapContainer} className="h-[600px] rounded-lg overflow-hidden relative" />
+            
+            {/* Custom Location Info Card - positioned to avoid conflicts */}
             {selectedLocationInfo && (
-                <div className="absolute top-4 left-4 z-20 bg-white rounded-xl shadow-xl border border-gray-200 max-w-sm">
+                <div className={`absolute z-20 bg-white rounded-xl shadow-xl border border-gray-200 max-w-sm ${
+                    selectedFieldIndex !== null && selectedFromRiskAssessment 
+                        ? 'top-20 left-4' // Move down if selection indicator is showing
+                        : 'top-4 left-4'   // Normal position
+                }`}>
                     <div className="p-4">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-3">
@@ -477,14 +543,20 @@ export const FarmersMap = ({ farmers, orderData, isActive }) => {
             )}
 
             {geojsonData && geojsonData.features && geojsonData.features.length > 0 && (
-                <MapFieldsList 
-                    geojsonData={geojsonData} 
-                    selectedFeature={selectedFeature} 
-                    showKey={showKey} 
-                    setShowKey={setShowKey} 
-                    flyToFeature={flyToFeature} 
-                    showAllFields={showAllFields} 
-                />
+                <div className={`absolute z-10 ${
+                    selectedFieldIndex !== null && selectedFromRiskAssessment 
+                        ? 'top-20 right-4' // Move down if selection indicator is showing
+                        : 'top-4 right-4'   // Normal position
+                }`}>
+                    <MapFieldsList 
+                        geojsonData={geojsonData} 
+                        selectedFeature={selectedFeature} 
+                        showKey={showKey} 
+                        setShowKey={setShowKey} 
+                        flyToFeature={flyToFeature} 
+                        showAllFields={showAllFields} 
+                    />
+                </div>
             )}
             
             {!mapLoaded && ( 

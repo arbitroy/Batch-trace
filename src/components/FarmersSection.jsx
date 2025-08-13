@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { TabButton } from './TabButton';
 import { FarmersList } from './FarmersList';
 import { FarmersMap } from './FarmersMap';
+import { RiskAssessmentTable } from './RiskAssessmentTable';
 import { hasGeojsonData } from '../utils/geojsonHelpers';
+import { loadGeojsonData } from '../utils/mapHelpers';
 
 export const FarmersSection = ({ farmers, orderData }) => {
     const [activeTab, setActiveTab] = useState('list');
+    const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
+    const [geojsonData, setGeojsonData] = useState(null);
+    const [selectedFromRiskAssessment, setSelectedFromRiskAssessment] = useState(false);
 
     // Reset active tab to 'list' if we're on 'map' tab but no GeoJSON data is available
     useEffect(() => {
@@ -13,6 +18,55 @@ export const FarmersSection = ({ farmers, orderData }) => {
             setActiveTab('list');
         }
     }, [orderData, activeTab]);
+
+    // Check if we have GeoJSON data for map and risk assessment
+    const hasGeoData = hasGeojsonData(orderData);
+
+    // Load GeoJSON data for risk assessment
+    useEffect(() => {
+        const loadGeoData = async () => {
+            if (hasGeoData) {
+                try {
+                    const geoData = await loadGeojsonData(orderData, (error) => {
+                        console.error('Error loading geo data:', error);
+                    });
+                    setGeojsonData(geoData);
+                } catch (error) {
+                    console.error('Error loading geo data for risk assessment:', error);
+                }
+            }
+        };
+        loadGeoData();
+    }, [orderData, hasGeoData]);
+
+    // Handle field selection from risk assessment table
+    const handleFieldSelect = (feature, index) => {
+        setSelectedFieldIndex(index);
+        setSelectedFromRiskAssessment(true);
+        // Switch to map tab to show the selected field
+        if (hasGeoData) {
+            setActiveTab('map');
+        }
+    };
+
+    // Handle field selection from map (clear the risk assessment flag)
+    const handleMapFieldSelect = (index) => {
+        setSelectedFieldIndex(index);
+        setSelectedFromRiskAssessment(false);
+    };
+
+    // Clear field selection
+    const clearFieldSelection = () => {
+        setSelectedFieldIndex(null);
+        setSelectedFromRiskAssessment(false);
+    };
+
+    // Reset selection when switching tabs
+    useEffect(() => {
+        if (activeTab !== 'map') {
+            setSelectedFromRiskAssessment(false);
+        }
+    }, [activeTab]);
 
     return (
         <div className="mb-6 md:mb-8">
@@ -23,7 +77,7 @@ export const FarmersSection = ({ farmers, orderData }) => {
             </div>
 
             {/* Tabs Navigation */}
-            <div className="flex space-x-1 mb-4">
+            <div className="flex space-x-1 mb-4 overflow-x-auto">
                 <TabButton
                     active={activeTab === 'list'}
                     onClick={() => setActiveTab('list')}
@@ -35,7 +89,8 @@ export const FarmersSection = ({ farmers, orderData }) => {
                 >
                     Farmers List
                 </TabButton>
-                {hasGeojsonData(orderData) && (
+                
+                {hasGeoData && (
                     <TabButton
                         active={activeTab === 'map'}
                         onClick={() => setActiveTab('map')}
@@ -48,6 +103,20 @@ export const FarmersSection = ({ farmers, orderData }) => {
                         Fields Map
                     </TabButton>
                 )}
+
+                {hasGeoData && geojsonData && (
+                    <TabButton
+                        active={activeTab === 'risk'}
+                        onClick={() => setActiveTab('risk')}
+                        icon={
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        }
+                    >
+                        Risk Assessment
+                    </TabButton>
+                )}
             </div>
 
             {/* Tab Content */}
@@ -58,9 +127,26 @@ export const FarmersSection = ({ farmers, orderData }) => {
                     </div>
                 )}
 
-                {activeTab === 'map' && hasGeojsonData(orderData) && (
+                {activeTab === 'map' && hasGeoData && (
                     <div className="p-4">
-                        <FarmersMap farmers={farmers} orderData={orderData} isActive={activeTab === 'map'} />
+                        <FarmersMap 
+                            farmers={farmers} 
+                            orderData={orderData} 
+                            isActive={activeTab === 'map'}
+                            selectedFieldIndex={selectedFieldIndex}
+                            onFieldSelect={handleMapFieldSelect}
+                            selectedFromRiskAssessment={selectedFromRiskAssessment}
+                        />
+                    </div>
+                )}
+
+                {activeTab === 'risk' && hasGeoData && geojsonData && (
+                    <div className="p-4">
+                        <RiskAssessmentTable
+                            geojsonData={geojsonData}
+                            onFieldSelect={handleFieldSelect}
+                            selectedFieldIndex={selectedFieldIndex}
+                        />
                     </div>
                 )}
             </div>

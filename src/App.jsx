@@ -50,8 +50,11 @@ function App() {
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-company-sky/20 via-white to-company-sky/20 pt-4 pb-4 md:pt-6 md:pb-8">
-      <div className="max-w-6xl mx-auto bg-white rounded-lg md:rounded-xl shadow-lg md:shadow-xl overflow-hidden">
+    <div className="relative w-full bg-gradient-to-br from-company-sky/20 via-white to-company-sky/20 pt-4 pb-4 md:pt-6 md:pb-8">
+      {/* Company Logo positioned at top left */}
+      <img src="/e-prod_Logo.png" alt="Company Logo" className="absolute top-4 left-4 md:top-6 md:left-6 h-32 w-32 md:h-24 md:w-32 z-10" />
+      
+      <div className="max-w-7xl mx-auto bg-white rounded-lg md:rounded-xl shadow-lg md:shadow-xl overflow-hidden">
         <OrderHeader />
         
         <div className="p-4 md:p-6">
