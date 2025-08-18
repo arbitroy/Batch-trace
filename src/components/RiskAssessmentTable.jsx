@@ -103,8 +103,8 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
     }, [processedData]);
 
     const riskTypes = [
-        { key: 'pcrop', label: 'Perennial Crop Risk', icon: '🌱', shortLabel: 'Perennial' },
-        { key: 'acrop', label: 'Annual Crop Risk', icon: '🌾', shortLabel: 'Annual' },
+        { key: 'pcrop', label: 'Perennial Crop Risk (Coffee, Tea, Sugarcane)', icon: '🌱', shortLabel: 'Perennial' },
+        { key: 'acrop', label: 'Annual Crop Risk (Soy, Palm Oil)', icon: '🌾', shortLabel: 'Annual' },
         { key: 'timber', label: 'Timber Risk', icon: '🌳', shortLabel: 'Timber' }
     ];
 
