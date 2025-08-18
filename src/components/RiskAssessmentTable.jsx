@@ -16,7 +16,27 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
             .join(' ');
     };
 
-    // Helper function to get risk badge colors
+    // Helper function to get yes/no badge colors
+    const getYesNoBadgeColor = (value) => {
+        if (!value) return 'bg-gray-100 text-gray-800';
+        
+        const val = value.toLowerCase();
+        
+        switch (val) {
+            case 'yes':
+                return 'bg-green-100 text-green-800';  // Green for "yes"
+            case 'no':
+                return 'bg-red-100 text-red-800';      // Red for "no"
+            default:
+                return 'bg-gray-100 text-gray-800';    // Gray for unknown
+        }
+    };
+
+    // Helper function to format yes/no values
+    const formatYesNoValue = (value) => {
+        if (!value) return 'Unknown';
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    };
     const getRiskBadgeColor = (risk) => {
         if (!risk) return 'bg-gray-100 text-gray-800';
         
@@ -24,16 +44,16 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
         
         switch (riskLevel) {
             case 'low':
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-100 text-green-800';  // 🟢 Green - Safe
             case 'medium':
             case 'moderate':
-                return 'bg-yellow-100 text-yellow-800';
+                return 'bg-yellow-100 text-yellow-800'; // 🟡 Yellow - Caution
             case 'high':
-                return 'bg-red-100 text-red-800';
+                return 'bg-red-100 text-red-800';       // 🔴 Red - Danger
             case 'more_info_needed':
-                return 'bg-blue-100 text-blue-800';
+                return 'bg-yellow-100 text-yellow-800'; // 🟡 Yellow - Caution/Warning
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-100 text-gray-800';     // ⚪ Gray - Unknown
         }
     };
 
@@ -48,13 +68,14 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                 name: props.name || props.fieldName || `Field ${index + 1}`,
                 area: props.Area ? parseFloat(props.Area).toFixed(4) : null,
                 unit: props.Unit || 'ha',
-                region: props.Admin_Level_1,
-                country: props.Country,
                 farmerName: props.farmerName,
                 featureType: feature.geometry.type === 'Point' ? 'Point Location' : 'Field Boundary',
                 riskPcrop: props.risk_pcrop,
                 riskAcrop: props.risk_acrop,
                 riskTimber: props.risk_timber,
+                treeCover: props.Ind_01_treecover,
+                disturbanceBefore2020: props.Ind_03_disturbance_before_2020,
+                disturbanceAfter2020: props.Ind_04_disturbance_after_2020,
                 feature
             };
         });
@@ -103,8 +124,8 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
     }, [processedData]);
 
     const riskTypes = [
-        { key: 'pcrop', label: 'Perennial Crop Risk (Coffee, Tea, Sugarcane)', icon: '🌱', shortLabel: 'Perennial' },
-        { key: 'acrop', label: 'Annual Crop Risk (Soy, Palm Oil)', icon: '🌾', shortLabel: 'Annual' },
+        { key: 'pcrop', label: 'Perennial Crop Risk', icon: '🌱', shortLabel: 'Perennial' },
+        { key: 'acrop', label: 'Annual Crop Risk', icon: '🌾', shortLabel: 'Annual' },
         { key: 'timber', label: 'Timber Risk', icon: '🌳', shortLabel: 'Timber' }
     ];
 
@@ -160,7 +181,7 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-gray-600">More Info Needed:</span>
-                                <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-medium">
+                                <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 font-medium">
                                     {riskStats[riskType.key].more_info_needed}
                                 </span>
                             </div>
@@ -261,6 +282,27 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                                             </span>
                                         </div>
 
+                                        <div className="flex justify-between">
+                                            <span className="text-sm text-gray-600">Tree Cover:</span>
+                                            <span className={`text-xs font-medium px-2 py-1 rounded-full ${getYesNoBadgeColor(field.treeCover)}`}>
+                                                {formatYesNoValue(field.treeCover)}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="flex justify-between">
+                                            <span className="text-sm text-gray-600">Disturbance Before 2020:</span>
+                                            <span className={`text-xs font-medium px-2 py-1 rounded-full ${getYesNoBadgeColor(field.disturbanceBefore2020)}`}>
+                                                {formatYesNoValue(field.disturbanceBefore2020)}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="flex justify-between">
+                                            <span className="text-sm text-gray-600">Disturbance After 2020:</span>
+                                            <span className={`text-xs font-medium px-2 py-1 rounded-full ${getYesNoBadgeColor(field.disturbanceAfter2020)}`}>
+                                                {formatYesNoValue(field.disturbanceAfter2020)}
+                                            </span>
+                                        </div>
+
                                         {field.region && (
                                             <div className="flex justify-between">
                                                 <span className="text-sm text-gray-600">Region:</span>
@@ -284,7 +326,13 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                                             Area
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Location
+                                            🌳 Tree Cover
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ⚠️ Before 2020
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            ⚠️ After 2020
                                         </th>
                                         {riskTypes.map(riskType => (
                                             <th key={riskType.key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -344,8 +392,19 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                                                 {field.area ? `${field.area} ${field.unit}` : 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{field.region || 'N/A'}</div>
-                                                <div className="text-sm text-gray-500">{field.country || 'N/A'}</div>
+                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getYesNoBadgeColor(field.treeCover)}`}>
+                                                    {formatYesNoValue(field.treeCover)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getYesNoBadgeColor(field.disturbanceBefore2020)}`}>
+                                                    {formatYesNoValue(field.disturbanceBefore2020)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getYesNoBadgeColor(field.disturbanceAfter2020)}`}>
+                                                    {formatYesNoValue(field.disturbanceAfter2020)}
+                                                </span>
                                             </td>
                                             {riskTypes.map(riskType => (
                                                 <td key={riskType.key} className="px-6 py-4 whitespace-nowrap">

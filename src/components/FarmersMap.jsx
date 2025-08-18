@@ -37,23 +37,23 @@ export const FarmersMap = ({ farmers, orderData, isActive, selectedFieldIndex, o
     };
 
     // Helper function to get risk badge colors
-    const getRiskBadgeColor = (risk) => {
+   const getRiskBadgeColor = (risk) => {
         if (!risk) return 'bg-gray-100 text-gray-800';
         
         const riskLevel = risk.toLowerCase();
         
         switch (riskLevel) {
             case 'low':
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-100 text-green-800';  // 🟢 Green - Safe
             case 'medium':
             case 'moderate':
-                return 'bg-yellow-100 text-yellow-800';
+                return 'bg-yellow-100 text-yellow-800'; // 🟡 Yellow - Caution
             case 'high':
-                return 'bg-red-100 text-red-800';
+                return 'bg-red-100 text-red-800';       // 🔴 Red - Danger
             case 'more_info_needed':
-                return 'bg-blue-100 text-blue-800';
+                return 'bg-yellow-100 text-yellow-800'; // 🟡 Yellow - Caution/Warning
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-100 text-gray-800';     // ⚪ Gray - Unknown
         }
     };
 
