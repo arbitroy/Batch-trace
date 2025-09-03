@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export const useOrderData = (licenceid, guid) => {
+export const useOrderData = (licenceid, guid, db) => {
     const [orderData, setOrderData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -25,6 +25,11 @@ export const useOrderData = (licenceid, guid) => {
         if (licenceid && guid) {
             const url = `${window.location.protocol}//${window.location.host}/call-api`;
             const data = { licenseid: licenceid, guid: guid };
+            
+            // Add db to the request if it's provided
+            if (db) {
+                data.db = db;
+            }
 
             fetch(url, {
                 method: 'POST',
@@ -52,7 +57,7 @@ export const useOrderData = (licenceid, guid) => {
         } else {
             fetchLocalData();
         }
-    }, [licenceid, guid]);
+    }, [licenceid, guid, db]); // Add db to dependency array
 
     return { orderData, loading, error };
 };

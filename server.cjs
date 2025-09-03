@@ -27,6 +27,12 @@ app.post('/call-api', async (req, res) => {
         guid: data.guid
     };
     
+    // Add db to payload if provided
+    if (data.db) {
+        payload.db = data.db;
+        console.log('✅ Including db parameter in external API request:', data.db);
+    }
+    
     console.log('📤 Sending to External API:', EXTERNAL_API_URL);
     console.log('📦 Payload:', payload);
     

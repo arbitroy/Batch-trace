@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { OrderHeader } from './components/OrderHeader';
 import { OrderInfo } from './components/OrderInfo';
@@ -14,6 +13,7 @@ import { decodeUrlParams } from './utils/urlDecoder';
 function App() {
   const [licenceid, setLicenseid] = useState('');
   const [guid, setGuid] = useState('');
+  const [db, setDb] = useState('');
   
   // Decode URL parameters on mount
   useEffect(() => {
@@ -21,11 +21,12 @@ function App() {
     if (params) {
       setLicenseid(params.licenceid);
       setGuid(params.guid);
+      setDb(params.db || ''); // Set db if available, empty string if not
     }
   }, []);
 
-  // Fetch order data
-  const { orderData, loading, error } = useOrderData(licenceid, guid);
+  // Fetch order data (now includes db parameter)
+  const { orderData, loading, error } = useOrderData(licenceid, guid, db);
 
   // Calculate batch amounts
   const batchAmounts = orderData?.farmers

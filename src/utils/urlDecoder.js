@@ -16,7 +16,7 @@ export const decodeUrlParams = () => {
             try {
                 const licenceid = atob(encodedLicenceId);
                 const guid = encodedGuid;
-                console.log('Decoded licenceid:', licenceid);
+
                 console.log('GUID:', guid);
                 return { licenceid, guid };
             } catch (e) {
@@ -28,8 +28,20 @@ export const decodeUrlParams = () => {
             try {
                 const decodedString = atob(encodedString);
                 if (decodedString.includes('.')) {
-                    const [licenceid, guid] = decodedString.split('.');
-                    return { licenceid, guid };
+                    const parts = decodedString.split('.');
+                    
+                    if (parts.length === 3) {
+                        // New format: licenseid.guid.db
+                        const [licenceid, guid, db] = parts;
+                        return { licenceid, guid, db };
+                    } else if (parts.length === 2) {
+                        // Legacy format: licenseid.guid
+                        const [licenceid, guid] = parts;
+                        return { licenceid, guid };
+                    } else {
+                        console.error('Unexpected format of decoded string:', decodedString);
+                        return null;
+                    }
                 } else {
                     console.error('Cannot determine format of decoded string:', decodedString);
                     return null;
