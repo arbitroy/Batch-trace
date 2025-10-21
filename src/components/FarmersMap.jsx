@@ -47,11 +47,11 @@ export const FarmersMap = ({ farmers, orderData, isActive, selectedFieldIndex, o
                 return 'bg-green-100 text-green-800';  // 🟢 Green - Safe
             case 'medium':
             case 'moderate':
-                return 'bg-yellow-100 text-yellow-800'; // 🟡 Yellow - Caution
+                return 'bg-orange-300 text-orange-500'; // 🟡 Yellow - Caution
             case 'high':
                 return 'bg-red-100 text-red-800';       // 🔴 Red - Danger
             case 'more_info_needed':
-                return 'bg-yellow-100 text-yellow-800'; // 🟡 Yellow - Caution/Warning
+                return 'bg-orange-300 text-orange-500'; // 🟡 Yellow - Caution/Warning
             default:
                 return 'bg-gray-100 text-gray-800';     // ⚪ Gray - Unknown
         }

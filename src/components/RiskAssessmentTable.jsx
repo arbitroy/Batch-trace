@@ -19,9 +19,9 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
     // Helper function to get yes/no badge colors
     const getYesNoBadgeColor = (value) => {
         if (!value) return 'bg-gray-100 text-gray-800';
-        
+
         const val = value.toLowerCase();
-        
+
         switch (val) {
             case 'yes':
                 return 'bg-green-100 text-green-800';  // Green for "yes"
@@ -39,19 +39,19 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
     };
     const getRiskBadgeColor = (risk) => {
         if (!risk) return 'bg-gray-100 text-gray-800';
-        
+
         const riskLevel = risk.toLowerCase();
-        
+
         switch (riskLevel) {
             case 'low':
                 return 'bg-green-100 text-green-800';  // 🟢 Green - Safe
             case 'medium':
             case 'moderate':
-                return 'bg-yellow-100 text-yellow-800'; // 🟡 Yellow - Caution
+                return 'bg-orange-300 text-orange-500'; // 🟡 Yellow - Caution
             case 'high':
                 return 'bg-red-100 text-red-800';       // 🔴 Red - Danger
             case 'more_info_needed':
-                return 'bg-yellow-100 text-yellow-800'; // 🟡 Yellow - Caution/Warning
+                return 'bg-orange-300 text-orange-500'; // 🟡 Yellow - Caution/Warning
             default:
                 return 'bg-gray-100 text-gray-800';     // ⚪ Gray - Unknown
         }
@@ -110,7 +110,7 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
             ['pcrop', 'acrop', 'timber'].forEach(riskType => {
                 const riskKey = `risk${riskType.charAt(0).toUpperCase() + riskType.slice(1)}`;
                 const riskValue = item[riskKey];
-                
+
                 if (riskValue) {
                     stats[riskType].total++;
                     if (stats[riskType][riskValue] !== undefined) {
@@ -181,7 +181,7 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-gray-600">More Info Needed:</span>
-                                <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 font-medium">
+                                <span className="px-2 py-1 text-xs rounded-full bg-orange-300 text-orange-500 font-medium">
                                     {riskStats[riskType.key].more_info_needed}
                                 </span>
                             </div>
@@ -211,7 +211,7 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                         </button>
                     )}
                 </div>
-                
+
                 <div className="text-sm text-gray-600">
                     Showing {filteredData.length} of {processedData.length} fields
                     {hasActiveFilters && (
@@ -241,18 +241,17 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                         {/* Mobile view: Cards */}
                         <div className="md:hidden">
                             {filteredData.map((field) => (
-                                <div 
+                                <div
                                     key={field.index}
-                                    className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                        selectedFieldIndex === field.index ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                                    }`}
+                                    className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${selectedFieldIndex === field.index ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                                        }`}
                                     onClick={() => onFieldSelect(field.feature, field.index)}
                                 >
                                     <div className="flex items-start justify-between mb-3">
                                         <h4 className="font-medium text-gray-900">{field.name}</h4>
                                         <span className="text-xs text-gray-500">{field.featureType}</span>
                                     </div>
-                                    
+
                                     <div className="space-y-2">
                                         {field.area && (
                                             <div className="flex justify-between">
@@ -260,21 +259,21 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                                                 <span className="text-sm font-medium">{field.area} {field.unit}</span>
                                             </div>
                                         )}
-                                        
+
                                         <div className="flex justify-between">
                                             <span className="text-sm text-gray-600">Perennial Risk:</span>
                                             <span className={`text-xs font-medium px-2 py-1 rounded-full ${getRiskBadgeColor(field.riskPcrop)}`}>
                                                 {formatRiskValue(field.riskPcrop)}
                                             </span>
                                         </div>
-                                        
+
                                         <div className="flex justify-between">
                                             <span className="text-sm text-gray-600">Annual Risk:</span>
                                             <span className={`text-xs font-medium px-2 py-1 rounded-full ${getRiskBadgeColor(field.riskAcrop)}`}>
                                                 {formatRiskValue(field.riskAcrop)}
                                             </span>
                                         </div>
-                                        
+
                                         <div className="flex justify-between">
                                             <span className="text-sm text-gray-600">Timber Risk:</span>
                                             <span className={`text-xs font-medium px-2 py-1 rounded-full ${getRiskBadgeColor(field.riskTimber)}`}>
@@ -288,14 +287,14 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                                                 {formatYesNoValue(field.treeCover)}
                                             </span>
                                         </div>
-                                        
+
                                         <div className="flex justify-between">
                                             <span className="text-sm text-gray-600">Disturbance Before 2020:</span>
                                             <span className={`text-xs font-medium px-2 py-1 rounded-full ${getYesNoBadgeColor(field.disturbanceBefore2020)}`}>
                                                 {formatYesNoValue(field.disturbanceBefore2020)}
                                             </span>
                                         </div>
-                                        
+
                                         <div className="flex justify-between">
                                             <span className="text-sm text-gray-600">Disturbance After 2020:</span>
                                             <span className={`text-xs font-medium px-2 py-1 rounded-full ${getYesNoBadgeColor(field.disturbanceAfter2020)}`}>
@@ -363,11 +362,10 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {filteredData.map((field) => (
-                                        <tr 
+                                        <tr
                                             key={field.index}
-                                            className={`hover:bg-gray-50 transition-colors ${
-                                                selectedFieldIndex === field.index ? 'bg-blue-50' : ''
-                                            }`}
+                                            className={`hover:bg-gray-50 transition-colors ${selectedFieldIndex === field.index ? 'bg-blue-50' : ''
+                                                }`}
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
@@ -408,9 +406,8 @@ export const RiskAssessmentTable = ({ geojsonData, onFieldSelect, selectedFieldI
                                             </td>
                                             {riskTypes.map(riskType => (
                                                 <td key={riskType.key} className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                        getRiskBadgeColor(field[`risk${riskType.key.charAt(0).toUpperCase() + riskType.key.slice(1)}`])
-                                                    }`}>
+                                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRiskBadgeColor(field[`risk${riskType.key.charAt(0).toUpperCase() + riskType.key.slice(1)}`])
+                                                        }`}>
                                                         {formatRiskValue(field[`risk${riskType.key.charAt(0).toUpperCase() + riskType.key.slice(1)}`])}
                                                     </span>
                                                 </td>
