@@ -1,6 +1,7 @@
 import React from 'react';
 
-export const BatchDetails = ({ batchAmounts }) => {
+export const BatchDetails = ({ batchAmounts, 
+    measurementUnit }) => {
     return (
         <div className="bg-company-sky/10 rounded-lg p-4 md:p-5 mb-6 md:mb-8">
             <div className="flex items-center mb-4">
@@ -20,7 +21,7 @@ export const BatchDetails = ({ batchAmounts }) => {
                         </div>
                         <div className="text-xs md:text-sm text-gray-500 mb-1">Amount</div>
                         <div className="text-lg md:text-xl font-semibold text-company-lime">
-                            {amount.toLocaleString()}
+                            {amount.toLocaleString()+ ' '+(measurementUnit || '')}
                         </div>
                     </div>
                 ))}

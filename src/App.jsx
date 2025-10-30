@@ -86,10 +86,11 @@ function App() {
             orderNumber={orderData?.OrderNumber}
             totalBatchAmount={totalBatchAmount}
             batchAmount={orderData?.BatchAmount}
+            measurementUnit={orderData?.MeasurementUnit}
           />
           
           {Object.keys(batchAmounts).length > 1 && (
-            <BatchDetails batchAmounts={batchAmounts} />
+            <BatchDetails batchAmounts={batchAmounts} measurementUnit={orderData?.MeasurementUnit} />
           )}
           
           {orderData?.Description && (

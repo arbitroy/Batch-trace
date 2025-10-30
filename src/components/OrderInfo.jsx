@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const OrderInfo = ({ orderNumber, totalBatchAmount, batchAmount }) => {
+export const OrderInfo = ({ orderNumber, totalBatchAmount, batchAmount,measurementUnit }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
             <div className="bg-company-sky/10 rounded-lg p-4 md:p-5">
@@ -30,7 +30,7 @@ export const OrderInfo = ({ orderNumber, totalBatchAmount, batchAmount }) => {
                 <div className="bg-white py-2 px-3 md:py-3 md:px-4 rounded border border-gray-200 text-center">
                     {totalBatchAmount > 0 ? (
                         <div className="text-lg md:text-xl text-company-lime font-medium">
-                            {totalBatchAmount.toLocaleString()}
+                            {totalBatchAmount.toLocaleString()+' '+(measurementUnit || '')}
                         </div>
                     ) : batchAmount ? (
                         <div className="text-lg md:text-xl text-company-lime font-medium">
